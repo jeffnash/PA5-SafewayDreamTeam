@@ -1213,6 +1213,16 @@ class lt extends Expression {
       * @param s the output stream 
       * */
     public void code(PrintStream s) {
+            e1.code(s);
+            CgenSupport.emitPush(CgenSupport.ACC, s);
+            e2.code(s);
+            CgenSupport.emitLoad(CgenSupport.T1, 4, CgenSupport.SP, s);
+            CgenSupport.emitBlt(CgenSupport.ACC, CgenSupport.T1, 1, s);
+            CgenSupport.emitLoadAddress(CgenSupport.ACC, "bool_const0", s);
+            CgenSupport.emitJal(0, s);
+            CgenSupport.emitLabelDef(1, s);
+            CgenSupport.emitLoadAddress(CgenSupport.ACC, "bool_const1", s);
+            CgenSupport.emitLabelDef(0, s);
     }
 
 
@@ -1259,6 +1269,18 @@ class eq extends Expression {
       * @param s the output stream 
       * */
     public void code(PrintStream s) {
+
+        //todo - global counter: 11/7/15
+            e1.code(s);
+            CgenSupport.emitPush(CgenSupport.ACC, s);
+            e2.code(s);
+            CgenSupport.emitLoad(CgenSupport.T1, 4, CgenSupport.SP, s);
+            CgenSupport.emitBeq(CgenSupport.ACC, CgenSupport.T1, 1, s);
+            CgenSupport.emitLoadAddress(CgenSupport.ACC, "bool_const0", s);
+            CgenSupport.emitJal(0, s);
+            CgenSupport.emitLabelDef(1, s);
+            CgenSupport.emitLoadAddress(CgenSupport.ACC, "bool_const1", s);
+            CgenSupport.emitLabelDef(0, s);
     }
 
 
@@ -1305,6 +1327,17 @@ class leq extends Expression {
       * @param s the output stream 
       * */
     public void code(PrintStream s) {
+
+                    e1.code(s);
+            CgenSupport.emitPush(CgenSupport.ACC, s);
+            e2.code(s);
+            CgenSupport.emitLoad(CgenSupport.T1, 4, CgenSupport.SP, s);
+            CgenSupport.emitBleq(CgenSupport.ACC, CgenSupport.T1, 1, s);
+            CgenSupport.emitLoadAddress(CgenSupport.ACC, "bool_const0", s);
+            CgenSupport.emitJal(0, s);
+            CgenSupport.emitLabelDef(1, s);
+            CgenSupport.emitLoadAddress(CgenSupport.ACC, "bool_const1", s);
+            CgenSupport.emitLabelDef(0, s);
     }
 
 
