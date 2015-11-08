@@ -963,6 +963,13 @@ class plus extends Expression {
       * @param s the output stream 
       * */
     public void code(PrintStream s) {
+        e1.code(s);
+        CgenSupport.emitPush(CgenSupport.ACC, s);
+        e2.code(s);
+        CgenSupport.emitLoad(CgenSupport.T1, 4, CgenSupport.SP, s);
+        CgenSupport.emitAdd(CgenSupport.ACC, CgenSupport.T1, CgenSupport.ACC, s);
+        CgenSupport.emitAddiu(CgenSupport.SP, CgenSupport.SP, 4, s);
+
     }
 
 
@@ -1009,6 +1016,12 @@ class sub extends Expression {
       * @param s the output stream 
       * */
     public void code(PrintStream s) {
+        e1.code(s);
+        CgenSupport.emitPush(CgenSupport.ACC, s);
+        e2.code(s);
+        CgenSupport.emitLoad(CgenSupport.T1, 4, CgenSupport.SP, s);
+        CgenSupport.emitSub(CgenSupport.ACC, CgenSupport.T1, CgenSupport.ACC, s);
+        CgenSupport.emitAddiu(CgenSupport.SP, CgenSupport.SP, 4, s);
     }
 
 
@@ -1055,6 +1068,12 @@ class mul extends Expression {
       * @param s the output stream 
       * */
     public void code(PrintStream s) {
+        e1.code(s);
+        CgenSupport.emitPush(CgenSupport.ACC, s);
+        e2.code(s);
+        CgenSupport.emitLoad(CgenSupport.T1, 4, CgenSupport.SP, s);
+        CgenSupport.emitMul(CgenSupport.ACC, CgenSupport.T1, CgenSupport.ACC, s);
+        CgenSupport.emitAddiu(CgenSupport.SP, CgenSupport.SP, 4, s);
     }
 
 
@@ -1101,6 +1120,12 @@ class divide extends Expression {
       * @param s the output stream 
       * */
     public void code(PrintStream s) {
+        e1.code(s);
+        CgenSupport.emitPush(CgenSupport.ACC, s);
+        e2.code(s);
+        CgenSupport.emitLoad(CgenSupport.T1, 4, CgenSupport.SP, s);
+        CgenSupport.emitDiv(CgenSupport.ACC, CgenSupport.T1, CgenSupport.ACC, s);
+        CgenSupport.emitAddiu(CgenSupport.SP, CgenSupport.SP, 4, s);
     }
 
 
