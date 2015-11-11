@@ -142,6 +142,7 @@ class CgenClassTable extends SymbolTable {
     private void codeConstants() {
 	// Add constants that are required by the code generator.
 	AbstractTable.stringtable.addString("");
+	//add all string constants here
 	/*Adding 0 to the int table. */
 	AbstractTable.inttable.addString("0");
 	/* Setting stringtable and inttable to the corresponding class tag values.
@@ -377,6 +378,7 @@ class CgenClassTable extends SymbolTable {
 
     /** Constructs a new class table and invokes the code generator */
     public CgenClassTable(Classes cls, PrintStream str) {
+    	//NDS CONTAINS ALL THE CLASSES WOW RARE AWESOME DISCOVERY BY JAESEO
 	nds = new Vector();
 
 	this.str = str;
@@ -412,6 +414,16 @@ class CgenClassTable extends SymbolTable {
 	//                 Add your code to emit
 	//                   - prototype objects
 	//                   - class_nameTab
+
+	/*Print out the class name table, iterating through the 'nds' vector,
+	 * which contains CgenNodes of all classes.*/
+	str.print("class_nameTab:\n");
+	for (int i = 0; i < nds.size(); i += 1) {
+		CgenNode curNDS = (CgenNode)nds.get(i);
+		str.print(CgenSupport.WORD + CgenSupport.STRCONST_PREFIX + Integer.toString(curNDS.getName().index));
+	}
+
+
 	//                   - dispatch tables
 
 	if (Flags.cgen_debug) System.out.println("coding global text");
