@@ -142,8 +142,11 @@ class CgenClassTable extends SymbolTable {
     private void codeConstants() {
 	// Add constants that are required by the code generator.
 	AbstractTable.stringtable.addString("");
+	/*Adding 0 to the int table. */
 	AbstractTable.inttable.addString("0");
-
+	/* Setting stringtable and inttable to the corresponding class tag values.
+	Doing a similar procedure for the bools, via the codeBools method, even though
+	BoolConst.java is technically not an AbstractTable. */
 	AbstractTable.stringtable.codeStringTable(stringclasstag, str);
 	AbstractTable.inttable.codeStringTable(intclasstag, str);
 	codeBools(boolclasstag);
@@ -379,8 +382,8 @@ class CgenClassTable extends SymbolTable {
 	this.str = str;
 
 	stringclasstag = 0 /* Change to your String class tag here */;
-	intclasstag =    0 /* Change to your Int class tag here */;
-	boolclasstag =   0 /* Change to your Bool class tag here */;
+	intclasstag =    1 /* Change to your Int class tag here */;
+	boolclasstag =   2 /* Change to your Bool class tag here */;
 
 	enterScope();
 	if (Flags.cgen_debug) System.out.println("Building CgenClassTable");
