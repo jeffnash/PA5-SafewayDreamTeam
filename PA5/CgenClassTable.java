@@ -389,8 +389,9 @@ class CgenClassTable extends SymbolTable {
 
 	enterScope();
 	if (Flags.cgen_debug) System.out.println("Building CgenClassTable");
-	
+	//This should install the basic classes in the nds vector first, so they have indeces of 0, 1, and 2
 	installBasicClasses();
+	// Now install other defined classes in inheritance tree
 	installClasses(cls);
 	buildInheritanceTree();
 
@@ -413,11 +414,25 @@ class CgenClassTable extends SymbolTable {
 
 	//                 Add your code to emit
 	//                   - prototype objects
+	for (int i = 0; i < nds.size(); i += 1) {
+		CgenNode curNDS = (CgenNode)nds.get(i);
+		CgenSupport.emitProtObjRef(curNDS.getName(), str);
+		/* The first three 32-bit words of each object are assumed to contain a class tag, the object size, and a
+			pointer for dispatch information. In addition, the garbage collector requires that the word immediately
+			before an object contain -1; this word is not part of the object.*/
+
+		str.print(CgenSupport.WORD + i);
+		//str.print(CgenSupport)
+	}
+	
+
 	//                   - class_nameTab
+
 
 	/*Print out the class name table, iterating through the 'nds' vector,
 	 * which contains CgenNodes of all classes.*/
-	str.print("class_nameTab:\n");
+	str.println(CgenSupport.CLASSNAMETAB + CgenSupport.LABEL 
+	    + CgenSupport.WORD);
 	for (int i = 0; i < nds.size(); i += 1) {
 		CgenNode curNDS = (CgenNode)nds.get(i);
 		str.print(CgenSupport.WORD + CgenSupport.STRCONST_PREFIX + Integer.toString(curNDS.getName().index));

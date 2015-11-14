@@ -50,9 +50,10 @@ class StringSymbol extends AbstractSymbol {
 				      (str.length() + 4) / 4)); // object size
 	s.print(CgenSupport.WORD);
 
-	/* Add code to reference the dispatch table for class String here */
-
-	s.println("");		// dispatch table
+	/* Add code to reference the dispatch table for class String here
+    DO WE HAVE ONE ?!?? - jeff */
+    s.println("String" + CgenSupport.DISPTAB_SUFFIX);// ispatch table
+	//s.println("");		
 	s.print(CgenSupport.WORD); lensym.codeRef(s); s.println(""); // length
 	CgenSupport.emitStringConstant(str, s); // ascii string
 	s.print(CgenSupport.ALIGN); // align to word
