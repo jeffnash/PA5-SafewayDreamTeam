@@ -413,7 +413,33 @@ class CgenClassTable extends SymbolTable {
 	codeConstants();
 
 	//                 Add your code to emit
+
+	//                   - class_nameTab
+	/*Print out the class name table, iterating through the 'nds' vector,
+	 * which contains CgenNodes of all classes.*/
+	str.print(CgenSupport.CLASSNAMETAB + CgenSupport.LABEL);
+	for (int i = 0; i < nds.size(); i += 1) {
+		CgenNode curNDS = (CgenNode)nds.get(i);
+		str.println(CgenSupport.WORD + CgenSupport.STRCONST_PREFIX + Integer.toString(curNDS.getName().index));
+	}
+
+
+
+
 	//                   - prototype objects
+
+	//first, we print the class_objTab
+
+	str.print(CgenSupport.CLASSOBJTAB + CgenSupport.LABEL);
+	for (int i = 0; i < nds.size(); i += 1) {
+		CgenNode curNDS = (CgenNode)nds.get(i);
+		//emitting a word for each prototype object
+		str.println(CgenSupport.WORD + curNDS.getName().toString() + CgenSupport.PROTOBJ_SUFFIX);
+
+		//emitting the word for each corresponding class initialization
+		str.println(CgenSupport.WORD + curNDS.getName().toString() + CgenSupport.CLASSINIT_SUFFIX);
+	}
+
 	for (int i = 0; i < nds.size(); i += 1) {
 		CgenNode curNDS = (CgenNode)nds.get(i);
 		CgenSupport.emitProtObjRef(curNDS.getName(), str);
@@ -421,25 +447,27 @@ class CgenClassTable extends SymbolTable {
 			pointer for dispatch information. In addition, the garbage collector requires that the word immediately
 			before an object contain -1; this word is not part of the object.*/
 
-		str.print(CgenSupport.WORD + i);
+		str.println(CgenSupport.LABEL + CgenSupport.WORD + i);
+		//object size...how do we get this: (11/14)?
+		int objSize = curNDS.features.getLength();
+		str.println(CgenSupport.WORD + objSize);
+		str.println(CgenSupport.WORD + curNDS.getName() + CgenSupport.DISPTAB_SUFFIX);
+		//we need to add attributes (11/14)
+
+
+		//ref to prototype obj default value in stringtable
 		//str.print(CgenSupport)
 	}
 	
 
-	//                   - class_nameTab
 
 
-	/*Print out the class name table, iterating through the 'nds' vector,
-	 * which contains CgenNodes of all classes.*/
-	str.println(CgenSupport.CLASSNAMETAB + CgenSupport.LABEL 
-	    + CgenSupport.WORD);
+
+	//                   - dispatch tables for each class
 	for (int i = 0; i < nds.size(); i += 1) {
 		CgenNode curNDS = (CgenNode)nds.get(i);
-		str.print(CgenSupport.WORD + CgenSupport.STRCONST_PREFIX + Integer.toString(curNDS.getName().index));
+
 	}
-
-
-	//                   - dispatch tables
 
 	if (Flags.cgen_debug) System.out.println("coding global text");
 	codeGlobalText();

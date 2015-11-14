@@ -1,5 +1,14 @@
 To-do list:
-- Line 412 in CgenClassTable
+11/14/15
+- each object's disp tab
+- add attributes during prototype object generation
+- figure out object length
+- init generation
+
+
+
+
+- Line 412 in CgenClassTable (still working 11/14/15)
 - line 71 in BoolConst.java
 - Hella methods in cool-tree.java
 - Line 420 in CgenClassTable
