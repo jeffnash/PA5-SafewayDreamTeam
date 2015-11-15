@@ -440,6 +440,36 @@ class CgenClassTable extends SymbolTable {
 		str.println(CgenSupport.WORD + curNDS.getName().toString() + CgenSupport.CLASSINIT_SUFFIX);
 	}
 
+	//                   - dispatch tables for each class
+	for (int i = 0; i < nds.size(); i += 1) {
+		CgenNode curNDS = (CgenNode)nds.get(i);
+		//save the original class's name
+		AbstractSymbol dispatchedClassName = curNDS.getName();
+		Vector<String> concatenatedClassMethodStrings = new Vector<String>();
+		while (curNDS.getParentNd() != null) {
+			AbstractSymbol className = curNDS.getName();
+			for (Enumeration e = curNDS.features.getElements(); e.hasMoreElements();) {
+				Feature curElement = (Feature)e.nextElement();
+				if (curElement instanceof method) {
+					method method = (method)curElement;
+					concatenatedClassMethodStrings.add(className.getString() + CgenSupport.METHOD_SEP + method.name.getString());
+				}
+			}
+			curNDS = curNDS.getParentNd();
+		}
+
+
+
+		str.print(dispatchedClassName + CgenSupport.DISPTAB_SUFFIX + CgenSupport.LABEL);
+		for (int j = concatenatedClassMethodStrings.size() - 1; j >= 0; j -= 1) {
+			String concatenatedClassMethodString = concatenatedClassMethodStrings.get(j);
+			str.println(CgenSupport.WORD + concatenatedClassMethodString);
+		}
+				
+
+	}
+
+
 	for (int i = 0; i < nds.size(); i += 1) {
 		CgenNode curNDS = (CgenNode)nds.get(i);
 		CgenSupport.emitProtObjRef(curNDS.getName(), str);
@@ -448,10 +478,17 @@ class CgenClassTable extends SymbolTable {
 			before an object contain -1; this word is not part of the object.*/
 
 		str.println(CgenSupport.LABEL + CgenSupport.WORD + i);
+		int attrCount = 3;
 		//object size...how do we get this: (11/14)?
-		int objSize = curNDS.features.getLength();
-		str.println(CgenSupport.WORD + objSize);
+		for (Enumeration e = curNDS.features.getElements(); e.hasMoreElements();) {
+			Feature curElement = (Feature)e.nextElement();
+			if (curElement instanceof attr) {
+				attrCount += 1;
+			}
+		}
+		str.println(CgenSupport.WORD + attrCount);
 		str.println(CgenSupport.WORD + curNDS.getName() + CgenSupport.DISPTAB_SUFFIX);
+		str.println(CgenSupport.WORD + "-1");
 		//we need to add attributes (11/14)
 
 
@@ -463,11 +500,6 @@ class CgenClassTable extends SymbolTable {
 
 
 
-	//                   - dispatch tables for each class
-	for (int i = 0; i < nds.size(); i += 1) {
-		CgenNode curNDS = (CgenNode)nds.get(i);
-
-	}
 
 	if (Flags.cgen_debug) System.out.println("coding global text");
 	codeGlobalText();

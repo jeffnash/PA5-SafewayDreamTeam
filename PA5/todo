@@ -1,5 +1,11 @@
 To-do list:
-11/14/15
+11/14 after starbucks
+-Figure out how to get indices of default values for prototype objects
+-Object init
+- labels!
+- if / then / else!
+
+11/14/15 morning
 - each object's disp tab
 - add attributes during prototype object generation
 - figure out object length
