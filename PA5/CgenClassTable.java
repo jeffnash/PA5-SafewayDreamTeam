@@ -25,7 +25,8 @@ import java.io.PrintStream;
 import java.util.Vector;
 import java.util.Enumeration;
 import java.util.HashMap;
-
+import java.util.ArrayList;
+import java.util.Collections;
 /** This class is used for representing the inheritance tree during code
     generation. You will need to fill in some of its methods and
     potentially extend it in other useful ways. */
@@ -365,8 +366,54 @@ class CgenClassTable extends SymbolTable {
         }
     }
 
-    private int numTempCounter(Expression expr) {
+    public static int getMax(ArrayList<Integer> findMax) {
+    	return Collections.max(findMax);
+    }
+
+    public static int numTempCounter(Expression expr) {
     	int tempCount = 0;
+    	//need to add case for id to return 0
+    	if (expr instanceof int_const || expr instanceof bool_const) {
+    		return 0;
+    	} else if (expr instanceof eq || expr instanceof leq) {
+    		ArrayList<Integer> findMax = new ArrayList<Integer>();
+	    	findMax.add(numTempCounter(((eq)expr).e1));
+	    	findMax.add(numTempCounter(((eq)expr).e2) + 1);
+    		return getMax(findMax);
+    	} else if (expr instanceof leq) {
+    		ArrayList<Integer> findMax = new ArrayList<Integer>();
+	    	findMax.add(numTempCounter(((leq)expr).e1));
+	    	findMax.add(numTempCounter(((leq)expr).e2) + 1);
+    		return getMax(findMax);
+    	} else if (expr instanceof plus) {
+
+	    	ArrayList<Integer> findMax = new ArrayList<Integer>();
+	    	findMax.add(numTempCounter(((plus)expr).e1));
+	    	findMax.add(numTempCounter(((plus)expr).e2) + 1);
+    		return getMax(findMax);
+    	} else if (expr instanceof sub) {
+    		ArrayList<Integer> findMax = new ArrayList<Integer>();
+	    	findMax.add(numTempCounter(((sub)expr).e1));
+	    	findMax.add(numTempCounter(((sub)expr).e2) + 1);
+    		return getMax(findMax);
+    	} else if (expr instanceof mul) {
+    		ArrayList<Integer> findMax = new ArrayList<Integer>();
+	    	findMax.add(numTempCounter(((mul)expr).e1));
+	    	findMax.add(numTempCounter(((mul)expr).e2) + 1);
+    		return getMax(findMax);
+    	} else if (expr instanceof divide) {
+    		ArrayList<Integer> findMax = new ArrayList<Integer>();
+	    	findMax.add(numTempCounter(((divide)expr).e1));
+	    	findMax.add(numTempCounter(((divide)expr).e2) + 1);
+    		return getMax(findMax);
+    	}else if (expr instanceof cond) {
+    		cond cond = (cond) expr;
+    		ArrayList<Integer> findMax = new ArrayList<Integer>();
+    		findMax.add(numTempCounter(cond.pred));
+    		findMax.add(numTempCounter(cond.then_exp));
+    		findMax.add(numTempCounter(cond.else_exp));
+    		return getMax(findMax);
+    	}
     	return tempCount;
     }
 
@@ -577,8 +624,8 @@ class CgenClassTable extends SymbolTable {
 				method curMeth = (method)curElement;
 				CgenSupport.emitMethodRef(curNDS.getName(), curMeth.name, str);
 				str.print(CgenSupport.LABEL);
-
-				//curMeth.expr.dump_with_types(str, 0);
+				curMeth.expr.code(str);
+				curMeth.expr.dump_with_types(str, 0);
 
 				//check if we have expressions! or expression
 

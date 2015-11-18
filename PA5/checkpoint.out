@@ -432,6 +432,15 @@ String.substr:
 _no_expr
 : _no_type
 Main.main:
+	addiu	$sp $sp -8
+	sw	$fp 8($sp)
+	sw	$s0 4($sp)
+	sw	$s0 0($sp)
+	addiu	$sp $fp 12
+	move	$s0 $a0
+	lw	$sp 8($ra)
+	addiu	$sp $sp 8
+	jalr	$ra
 #11
 _dispatch
   #11
