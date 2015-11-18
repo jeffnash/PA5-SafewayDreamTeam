@@ -24,6 +24,7 @@ PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 import java.io.PrintStream;
 import java.util.Vector;
 import java.util.Enumeration;
+import java.util.HashMap;
 
 /** This class is used for representing the inheritance tree during code
     generation. You will need to fill in some of its methods and
@@ -469,8 +470,24 @@ class CgenClassTable extends SymbolTable {
 
 	}
 
+	/* Make a map. */
+
+	/* Integer. */
+	HashMap<String, Integer> intIndexMap = new HashMap<String, Integer>();
+	//Iterate through intTable
+	for (int ind = 0; ind < AbstractTable.inttable.tbl.size(); ind += 1) {
+		intIndexMap.put(((AbstractSymbol)AbstractTable.inttable.tbl.get(ind)).str, ind);
+	}
+
+	/* String. */
+	HashMap<String, Integer> stringIndexMap = new HashMap<String, Integer>();
+	for (int ind = 0; ind < AbstractTable.stringtable.tbl.size(); ind += 1) {
+		stringIndexMap.put(((AbstractSymbol)AbstractTable.stringtable.tbl.get(ind)).str, ind);
+	}
+
 
 	for (int i = 0; i < nds.size(); i += 1) {
+		str.println(CgenSupport.WORD + "-1");
 		CgenNode curNDS = (CgenNode)nds.get(i);
 		CgenSupport.emitProtObjRef(curNDS.getName(), str);
 		/* The first three 32-bit words of each object are assumed to contain a class tag, the object size, and a
@@ -488,23 +505,19 @@ class CgenClassTable extends SymbolTable {
 		}
 		str.println(CgenSupport.WORD + attrCount);
 		str.println(CgenSupport.WORD + curNDS.getName() + CgenSupport.DISPTAB_SUFFIX);
-		str.println(CgenSupport.WORD + "-1");														//????????
 		//we need to add attributes (11/14)
 
-		for (Enumeration e = curNDS.feature.getElements(); e.hasMoreElements();) {
+		for (Enumeration e = curNDS.features.getElements(); e.hasMoreElements();) {
 			Feature curElement = (Feature)e.nextElement();
 			if (curElement instanceof attr) {
-				if (attr.type_decl.getString().equals(TreeConstants.Bool.getString())) {
-					str.println(CgenSupport.WORD + CgenSupport.BOOLCONST_PREFIX + "0")
-				} else if (attr.type_decl.getString().equals(TreeConstants.Int.getString())) {
-					int indexofzero = 0;
-					//find proper indexofzero
-					str.println(CgenSupport.WORD + CgenSupport.INTCONST_PREFIX + indexofzero)
-				} else if (attr.type_decl.getString().equals(TreeConstants.Str.getString())) {
-					// do something
-					int indexofemptystring = 0;
-					// find proper indexofemptystring
-					str.println(CgenSupport.WORD + CgenSupport.STRCONST_PREFIX + indexofemptystring)
+				if (((attr)curElement).type_decl.getString().equals(TreeConstants.Bool.getString())) {
+					str.println(CgenSupport.WORD + CgenSupport.BOOLCONST_PREFIX + "0");
+				} else if (((attr)curElement).type_decl.getString().equals(TreeConstants.Int.getString())) {
+					int indexofzero = intIndexMap.get("0");
+					str.println(CgenSupport.WORD + CgenSupport.INTCONST_PREFIX + indexofzero);
+				} else if (((attr)curElement).type_decl.getString().equals(TreeConstants.Str.getString())) {
+					int indexofemptystring = stringIndexMap.get("");
+					str.println(CgenSupport.WORD + CgenSupport.STRCONST_PREFIX + indexofemptystring);
 				} else {
 					str.println(CgenSupport.WORD + "0");
 				}
@@ -526,6 +539,31 @@ class CgenClassTable extends SymbolTable {
 
 	//                 Add your code to emit
 	//                   - object initializer
+	for (int i = 0; i < nds.size(); i += 1) {
+		CgenNode curNDS = (CgenNode)nds.get(i);
+		CgenSupport.emitInitRef(curNDS.getName(), str);
+		str.print(CgenSupport.LABEL);
+		CgenSupport.emitAddiu(CgenSupport.SP, CgenSupport.SP, -12, str);
+		CgenSupport.emitStore(CgenSupport.FP, 12/4, CgenSupport.SP, str);
+		CgenSupport.emitStore("$s0", 8/4, CgenSupport.SP, str);
+		CgenSupport.emitStore(CgenSupport.RA, 4/4, CgenSupport.SP, str);
+		CgenSupport.emitAddiu(CgenSupport.FP, CgenSupport.SP, 16, str);
+		CgenSupport.emitMove("$s0", CgenSupport.ACC, str);
+		//Object_init skips this line
+		if (!curNDS.getName().getString().equals(TreeConstants.Object_.getString())) {
+			CgenSupport.emitJal(curNDS.getParentNd().getName().getString() + CgenSupport.CLASSINIT_SUFFIX, str);
+
+		}
+		CgenSupport.emitMove(CgenSupport.ACC, "$s0", str);
+		CgenSupport.emitLoad(CgenSupport.FP, 12/4, CgenSupport.SP, str);
+		CgenSupport.emitLoad("$s0", 8/4, CgenSupport.SP, str);
+		CgenSupport.emitLoad(CgenSupport.RA, 4/4, CgenSupport.SP, str);
+		CgenSupport.emitAddiu(CgenSupport.SP, CgenSupport.SP, 12, str);
+		CgenSupport.emitReturn(str);
+
+
+	}
+
 	//                   - the class methods
 	//                   - etc...
     }

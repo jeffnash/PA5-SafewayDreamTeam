@@ -5,5 +5,8 @@
 
 class Main {
   main():Int { 0 };
-};
+  notMain(x:Int, y: Int, z:String): Int { {x; y;}};
+  definitelyNotMain(): String {
+	""};
+  };
 
