@@ -53,7 +53,7 @@ class CgenClassTable extends SymbolTable {
 	str.print("\t.data\n" + CgenSupport.ALIGN);
 	str.println(CgenSupport.GLOBAL + CgenSupport.CLASSNAMETAB);
 	str.print(CgenSupport.GLOBAL); 
-	CgenSupport.emitProtObjRef(TreeConstants.Main, str);
+	CgenSupport.emitProtObjRef(TreeConstants.Main, str);						// need to do something
 	str.println("");
 	str.print(CgenSupport.GLOBAL); 
 	CgenSupport.emitProtObjRef(TreeConstants.Int, str);
@@ -488,8 +488,23 @@ class CgenClassTable extends SymbolTable {
 		}
 		str.println(CgenSupport.WORD + attrCount);
 		str.println(CgenSupport.WORD + curNDS.getName() + CgenSupport.DISPTAB_SUFFIX);
-		str.println(CgenSupport.WORD + "-1");
+		str.println(CgenSupport.WORD + "-1");														//????????
 		//we need to add attributes (11/14)
+
+		for (Enumeration e = curNDS.feature.getElements(); e.hasMoreElements();) {
+			Feature curElement = (Feature)e.nextElement();
+			if (curElement instanceof attr) {
+				if (attr.type_decl.getString().equals(TreeConstants.Bool.getString())) {
+					// do something
+				} else if (attr.type_decl.getString().equals(TreeConstants.Int.getString())) {
+					// do something
+				} else if (attr.type_decl.getString().equals(TreeConstants.Str.getString())) {
+					// do something
+				} else {
+					str.println(CgenSupport.WORD + )
+				}
+			}
+		}
 
 
 		//ref to prototype obj default value in stringtable
