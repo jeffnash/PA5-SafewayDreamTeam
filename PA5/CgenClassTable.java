@@ -365,6 +365,11 @@ class CgenClassTable extends SymbolTable {
         }
     }
 
+    private int numTempCounter(Expression expr) {
+    	int tempCount = 0;
+    	return tempCount;
+    }
+
     private void buildInheritanceTree() {
 	for (Enumeration e = nds.elements(); e.hasMoreElements(); ) {
 	    setRelations((CgenNode)e.nextElement());
@@ -540,6 +545,7 @@ class CgenClassTable extends SymbolTable {
 	//                 Add your code to emit
 	//                   - object initializer
 	for (int i = 0; i < nds.size(); i += 1) {
+		//we will have to add attributes here later
 		CgenNode curNDS = (CgenNode)nds.get(i);
 		CgenSupport.emitInitRef(curNDS.getName(), str);
 		str.print(CgenSupport.LABEL);
@@ -560,6 +566,25 @@ class CgenClassTable extends SymbolTable {
 		CgenSupport.emitLoad(CgenSupport.RA, 4/4, CgenSupport.SP, str);
 		CgenSupport.emitAddiu(CgenSupport.SP, CgenSupport.SP, 12, str);
 		CgenSupport.emitReturn(str);
+
+	}
+
+	for (int i = 0; i < nds.size(); i += 1) {
+		CgenNode curNDS = (CgenNode)nds.get(i);
+		for (Enumeration e = curNDS.features.getElements(); e.hasMoreElements();) {
+			Feature curElement = (Feature)e.nextElement();
+			if (curElement instanceof method) {
+				method curMeth = (method)curElement;
+				CgenSupport.emitMethodRef(curNDS.getName(), curMeth.name, str);
+				str.print(CgenSupport.LABEL);
+
+				//curMeth.expr.dump_with_types(str, 0);
+
+				//check if we have expressions! or expression
+
+					
+				}
+			}
 
 
 	}

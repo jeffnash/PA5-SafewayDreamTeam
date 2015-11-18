@@ -673,6 +673,25 @@ class dispatch extends Expression {
       * @param s the output stream 
       * */
     public void code(PrintStream s) {
+        int NT = 0;
+        int offset = (NT + 1) * 4;
+        /* 12 is the amount of space we need for the temporaries in this frame = WORD_SIZE*(1 + NT), 
+                # alternatively, this is the max NT_offset that is valid = -12
+                # we adjust the stack pointer first by convention 
+                # (to deal with interrupts, which should not be an issue in this class) */
+        CgenSupport.emitAddiu(CgenSupport.SP, CgenSupport.SP, -offset, str);
+        /*We need to save $ra - we use the next empty slot, which is where $sp used to point to*/
+        CgenSupport.emitStore(CgenSupport.RA, offset, CgenSupport.SP, str);
+        /*# we now make sure that $fp points to the $ra slot 
+                # (so our current perspective looks like the diagram above, again)*/
+        CgenSupport.emitAddiu(CgenSupport.SP, CgenSupport.FP, offset, str);
+        expr.code();
+        //epilogue
+        //# restore $ra - same code as above in reverse
+        CgenSupport.emitLoad(CgenSupport.SP, offset, CgenSupport.RA, str);
+        CgenSupport.emitAddiu(CgenSupport.SP, CgenSupport.SP, offset, str);
+        CgenSupport.emitJalr(CgenSupport.RA, str);
+
     }
 
 

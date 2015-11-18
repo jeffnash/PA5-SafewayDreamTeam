@@ -1,24 +1,26 @@
+
+
+class Stock inherits Count { 
+   get() :String {"penis" };
+};
+
+class Poop inherits Stock {
+  poopNow() : String { "Penis"};
+};
+
 class Count {
-   i : Int <- 0;
-   inc () : SELF_TYPE {
+
+   inc () : Int {
         {
-            i <- i + 1;
-            self;
+            3 * 4 + 5;
+            4;
         }
     };
 };  
 
-class Stock inherits Count { 
-   name : String; -- name of item
-   get() :String {name };
-};
-
 class Main {
-  a:Stock;
-main() : Object {{
-  a <- (new Stock).inc (); 
-    a.get(); 
- }
+main() : Object {
+  3 
 };
 };
 
