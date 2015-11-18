@@ -495,13 +495,15 @@ class CgenClassTable extends SymbolTable {
 			Feature curElement = (Feature)e.nextElement();
 			if (curElement instanceof attr) {
 				if (attr.type_decl.getString().equals(TreeConstants.Bool.getString())) {
-					// do something
+					str.println(CgenSupport.WORD + CgenSupport.BOOLCONST_PREFIX + "0")
 				} else if (attr.type_decl.getString().equals(TreeConstants.Int.getString())) {
-					// do something
+					int indexofzero = 0;
+					//find proper indexofzero
+					tr.println(CgenSupport.WORD + CgenSupport.INTCONST_PREFIX + indexofzero)
 				} else if (attr.type_decl.getString().equals(TreeConstants.Str.getString())) {
 					// do something
 				} else {
-					str.println(CgenSupport.WORD + )
+					str.println(CgenSupport.WORD + "0");
 				}
 			}
 		}
