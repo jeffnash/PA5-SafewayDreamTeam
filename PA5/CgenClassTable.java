@@ -499,9 +499,12 @@ class CgenClassTable extends SymbolTable {
 				} else if (attr.type_decl.getString().equals(TreeConstants.Int.getString())) {
 					int indexofzero = 0;
 					//find proper indexofzero
-					tr.println(CgenSupport.WORD + CgenSupport.INTCONST_PREFIX + indexofzero)
+					str.println(CgenSupport.WORD + CgenSupport.INTCONST_PREFIX + indexofzero)
 				} else if (attr.type_decl.getString().equals(TreeConstants.Str.getString())) {
 					// do something
+					int indexofemptystring = 0;
+					// find proper indexofemptystring
+					str.println(CgenSupport.WORD + CgenSupport.STRCONST_PREFIX + indexofemptystring)
 				} else {
 					str.println(CgenSupport.WORD + "0");
 				}
