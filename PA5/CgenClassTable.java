@@ -370,51 +370,57 @@ class CgenClassTable extends SymbolTable {
     	return Collections.max(findMax);
     }
 
-    public static int numTempCounter(Expression expr) {
-    	int tempCount = 0;
+    public static int numTempCounterFunctionEntry(Expression expr) {
+    	ArrayList<Integer> findMax = new ArrayList<Integer>();
+
+    	findMax.clear();
+    	numTempCounter(expr, findMax);
+    	return getMax(findMax);
+    }
+
+    public static int numTempCounter(Expression expr, ArrayList<Integer> findMax) {
+    	
     	//need to add case for id to return 0
     	if (expr instanceof int_const || expr instanceof bool_const) {
     		return 0;
-    	} else if (expr instanceof eq || expr instanceof leq) {
-    		ArrayList<Integer> findMax = new ArrayList<Integer>();
-	    	findMax.add(numTempCounter(((eq)expr).e1));
-	    	findMax.add(numTempCounter(((eq)expr).e2) + 1);
-    		return getMax(findMax);
+    	} else if (expr instanceof eq) {
+	    	findMax.add(numTempCounter(((eq)expr).e1, findMax));
+	    	findMax.add(numTempCounter(((eq)expr).e2, findMax) + 1);
+	    	System.out.println("eq" + getMax(findMax));
     	} else if (expr instanceof leq) {
-    		ArrayList<Integer> findMax = new ArrayList<Integer>();
-	    	findMax.add(numTempCounter(((leq)expr).e1));
-	    	findMax.add(numTempCounter(((leq)expr).e2) + 1);
-    		return getMax(findMax);
-    	} else if (expr instanceof plus) {
+	    	findMax.add(numTempCounter(((leq)expr).e1, findMax));
+	    	findMax.add(numTempCounter(((leq)expr).e2, findMax) + 1);
+	    	System.out.println("leq" + getMax(findMax));
 
-	    	ArrayList<Integer> findMax = new ArrayList<Integer>();
-	    	findMax.add(numTempCounter(((plus)expr).e1));
-	    	findMax.add(numTempCounter(((plus)expr).e2) + 1);
-    		return getMax(findMax);
+    	} else if (expr instanceof plus) {
+	    	findMax.add(numTempCounter(((plus)expr).e1, findMax));
+	    	findMax.add(numTempCounter(((plus)expr).e2, findMax) + 1);
+	    		    		    	System.out.println("plus_" + getMax(findMax));
+
     	} else if (expr instanceof sub) {
-    		ArrayList<Integer> findMax = new ArrayList<Integer>();
-	    	findMax.add(numTempCounter(((sub)expr).e1));
-	    	findMax.add(numTempCounter(((sub)expr).e2) + 1);
-    		return getMax(findMax);
+	    	findMax.add(numTempCounter(((sub)expr).e1, findMax));
+	    	findMax.add(numTempCounter(((sub)expr).e2, findMax) + 1);
+	    		    		    	System.out.println("plus_" + getMax(findMax));
+
     	} else if (expr instanceof mul) {
-    		ArrayList<Integer> findMax = new ArrayList<Integer>();
-	    	findMax.add(numTempCounter(((mul)expr).e1));
-	    	findMax.add(numTempCounter(((mul)expr).e2) + 1);
-    		return getMax(findMax);
+	    	findMax.add(numTempCounter(((mul)expr).e1, findMax));
+	    	findMax.add(numTempCounter(((mul)expr).e2, findMax) + 1);
+	    		    		    	System.out.println("plus_" + getMax(findMax));
+
     	} else if (expr instanceof divide) {
-    		ArrayList<Integer> findMax = new ArrayList<Integer>();
-	    	findMax.add(numTempCounter(((divide)expr).e1));
-	    	findMax.add(numTempCounter(((divide)expr).e2) + 1);
-    		return getMax(findMax);
+	    	findMax.add(numTempCounter(((divide)expr).e1, findMax));
+	    	findMax.add(numTempCounter(((divide)expr).e2, findMax) + 1);
+	    		    		    	System.out.println("plus_" + getMax(findMax));
+
     	}else if (expr instanceof cond) {
     		cond cond = (cond) expr;
-    		ArrayList<Integer> findMax = new ArrayList<Integer>();
-    		findMax.add(numTempCounter(cond.pred));
-    		findMax.add(numTempCounter(cond.then_exp));
-    		findMax.add(numTempCounter(cond.else_exp));
-    		return getMax(findMax);
+    		findMax.add(numTempCounter(cond.pred, findMax));
+    		findMax.add(numTempCounter(cond.then_exp, findMax));
+    		findMax.add(numTempCounter(cond.else_exp, findMax));
+    			    		    	System.out.println("plus_" + getMax(findMax));
+
     	}
-    	return tempCount;
+    	return 0;
     }
 
     private void buildInheritanceTree() {
@@ -622,9 +628,38 @@ class CgenClassTable extends SymbolTable {
 			Feature curElement = (Feature)e.nextElement();
 			if (curElement instanceof method) {
 				method curMeth = (method)curElement;
+				System.out.println("hi");
 				CgenSupport.emitMethodRef(curNDS.getName(), curMeth.name, str);
 				str.print(CgenSupport.LABEL);
+				int NT = 1;
+				int offset = (NT + NT + 3) * 4;
+		        /* 12 is the amount of space we need for the temporaries in this frame = WORD_SIZE*(1 + NT), 
+		                # alternatively, this is the max NT_offset that is valid = -12
+		                # we adjust the stack pointer first by convention 
+		                # (to deal with interrupts, which should not be an issue in this class) */
+		        CgenSupport.emitAddiu(CgenSupport.SP, CgenSupport.SP, -offset, str);
+		        /*We need to save $ra - we use the next empty slot, which is where $sp used to point to*/
+		        CgenSupport.emitStore(CgenSupport.FP, (3 * 4) / 4, CgenSupport.SP, str);
+		        CgenSupport.emitStore("$s0", (2 * 4) / 4, CgenSupport.SP, str);
+		        CgenSupport.emitStore(CgenSupport.RA, (1 * 4) / 4, CgenSupport.SP, str);
+
+
+		        /*# we now make sure that $fp points to the $ra slot 
+		                # (so our current perspective looks like the diagram above, again)*/
+		        CgenSupport.emitAddiu(CgenSupport.FP, CgenSupport.SP, 4 * 4, str);
+		        CgenSupport.emitMove("$s0", CgenSupport.ACC, str);
+
+
 				curMeth.expr.code(str);
+
+				        //epilogue
+		        //# restore $ra - same code as above in reverse
+		        CgenSupport.emitLoad(CgenSupport.FP, (3 * 4) / 4, CgenSupport.SP, str);
+		        CgenSupport.emitLoad("$s0", (2 * 4) / 4, CgenSupport.SP, str);
+		        CgenSupport.emitLoad(CgenSupport.RA, (1 * 4) / 4, CgenSupport.SP, str);
+
+		        CgenSupport.emitAddiu(CgenSupport.SP, CgenSupport.SP, offset, str);
+		        CgenSupport.emitJalr(CgenSupport.RA, str);
 				curMeth.expr.dump_with_types(str, 0);
 
 				//check if we have expressions! or expression
