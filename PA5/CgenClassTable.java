@@ -479,7 +479,7 @@ class CgenClassTable extends SymbolTable {
 	str.print(CgenSupport.CLASSNAMETAB + CgenSupport.LABEL);
 	for (int i = 0; i < nds.size(); i += 1) {
 		CgenNode curNDS = (CgenNode)nds.get(i);
-		str.println(CgenSupport.WORD + CgenSupport.STRCONST_PREFIX + Integer.toString(curNDS.getName().index));
+		str.println(CgenSupport.WORD + CgenSupport.STRCONST_PREFIX + AbstractTable.stringtable.lookup(curNDS.getName().str).index);
 	}
 
 
@@ -528,21 +528,6 @@ class CgenClassTable extends SymbolTable {
 
 	}
 
-	/* Make a map. */
-
-	/* Integer. */
-	HashMap<String, Integer> intIndexMap = new HashMap<String, Integer>();
-	//Iterate through intTable
-	for (int ind = 0; ind < AbstractTable.inttable.tbl.size(); ind += 1) {
-		intIndexMap.put(((AbstractSymbol)AbstractTable.inttable.tbl.get(ind)).str, ind);
-	}
-
-	/* String. */
-	HashMap<String, Integer> stringIndexMap = new HashMap<String, Integer>();
-	for (int ind = 0; ind < AbstractTable.stringtable.tbl.size(); ind += 1) {
-		stringIndexMap.put(((AbstractSymbol)AbstractTable.stringtable.tbl.get(ind)).str, ind);
-	}
-
 
 	for (int i = 0; i < nds.size(); i += 1) {
 		str.println(CgenSupport.WORD + "-1");
@@ -571,10 +556,10 @@ class CgenClassTable extends SymbolTable {
 				if (((attr)curElement).type_decl.getString().equals(TreeConstants.Bool.getString())) {
 					str.println(CgenSupport.WORD + CgenSupport.BOOLCONST_PREFIX + "0");
 				} else if (((attr)curElement).type_decl.getString().equals(TreeConstants.Int.getString())) {
-					int indexofzero = intIndexMap.get("0");
+					int indexofzero = ((IntSymbol)AbstractTable.inttable.lookup("0")).index;
 					str.println(CgenSupport.WORD + CgenSupport.INTCONST_PREFIX + indexofzero);
 				} else if (((attr)curElement).type_decl.getString().equals(TreeConstants.Str.getString())) {
-					int indexofemptystring = stringIndexMap.get("");
+					int indexofemptystring = ((StringSymbol)AbstractTable.stringtable.lookup("")).index;
 					str.println(CgenSupport.WORD + CgenSupport.STRCONST_PREFIX + indexofemptystring);
 				} else {
 					str.println(CgenSupport.WORD + "0");
@@ -624,11 +609,21 @@ class CgenClassTable extends SymbolTable {
 
 	for (int i = 0; i < nds.size(); i += 1) {
 		CgenNode curNDS = (CgenNode)nds.get(i);
+		if (curNDS.getName().getString().equals("Object")) {
+			continue;
+		} else if (curNDS.getName().getString().equals("IO")) {
+			continue;
+		} else if (curNDS.getName().getString().equals("Int")) {
+			continue;
+		} else if (curNDS.getName().getString().equals("String")) {
+			continue;
+		} else if (curNDS.getName().getString().equals("Bool")) {
+			continue;
+		}
 		for (Enumeration e = curNDS.features.getElements(); e.hasMoreElements();) {
 			Feature curElement = (Feature)e.nextElement();
 			if (curElement instanceof method) {
 				method curMeth = (method)curElement;
-				System.out.println("hi");
 				CgenSupport.emitMethodRef(curNDS.getName(), curMeth.name, str);
 				str.print(CgenSupport.LABEL);
 				int NT = 1;
@@ -640,14 +635,14 @@ class CgenClassTable extends SymbolTable {
 		        CgenSupport.emitAddiu(CgenSupport.SP, CgenSupport.SP, -offset, str);
 		        /*We need to save $ra - we use the next empty slot, which is where $sp used to point to*/
 		        CgenSupport.emitStore(CgenSupport.FP, (3 * 4) / 4, CgenSupport.SP, str);
-		        CgenSupport.emitStore("$s0", (2 * 4) / 4, CgenSupport.SP, str);
+		        CgenSupport.emitStore(CgenSupport.SELF, (2 * 4) / 4, CgenSupport.SP, str);
 		        CgenSupport.emitStore(CgenSupport.RA, (1 * 4) / 4, CgenSupport.SP, str);
 
 
 		        /*# we now make sure that $fp points to the $ra slot 
 		                # (so our current perspective looks like the diagram above, again)*/
 		        CgenSupport.emitAddiu(CgenSupport.FP, CgenSupport.SP, 4 * 4, str);
-		        CgenSupport.emitMove("$s0", CgenSupport.ACC, str);
+		        CgenSupport.emitMove(CgenSupport.SELF, CgenSupport.ACC, str);
 
 
 				curMeth.expr.code(str);
@@ -655,20 +650,18 @@ class CgenClassTable extends SymbolTable {
 				        //epilogue
 		        //# restore $ra - same code as above in reverse
 		        CgenSupport.emitLoad(CgenSupport.FP, (3 * 4) / 4, CgenSupport.SP, str);
-		        CgenSupport.emitLoad("$s0", (2 * 4) / 4, CgenSupport.SP, str);
+		        CgenSupport.emitLoad(CgenSupport.SELF, (2 * 4) / 4, CgenSupport.SP, str);
 		        CgenSupport.emitLoad(CgenSupport.RA, (1 * 4) / 4, CgenSupport.SP, str);
 
 		        CgenSupport.emitAddiu(CgenSupport.SP, CgenSupport.SP, offset, str);
-		        CgenSupport.emitJalr(CgenSupport.RA, str);
-				curMeth.expr.dump_with_types(str, 0);
+		        CgenSupport.emitReturn(str);
+				// curMeth.expr.dump_with_types(str, 0);
 
 				//check if we have expressions! or expression
 
 					
 				}
 			}
-
-
 	}
 
 	//                   - the class methods

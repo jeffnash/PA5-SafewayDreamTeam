@@ -1,0 +1,34 @@
+Conclusion:
+We are almost done.
+
+Reason:
+Below are output from my terminal
+================================================================================
+LeeJeaSeos-MacBook-Air:PA5 jlee$ ./mycoolc -o checkpoint.out tests/checkpoint.cl
+LeeJeaSeos-MacBook-Air:PA5 jlee$ ./runmips checkpoint.out
+MARS 4.5  Copyright 2003-2014 Pete Sanderson and Kenneth Vollmar
+
+2COOL program successfully executed
+
+LeeJeaSeos-MacBook-Air:PA5 jlee$ ./runmips checkpoint-cool.out
+MARS 4.5  Copyright 2003-2014 Pete Sanderson and Kenneth Vollmar
+
+2COOL program successfully executed
+================================================================================
+You can see that we are getting exactly the same output as reference cgen.
+When it comes to checkpoint.cl (and only that), it is perfect!
+except in line#700 in cool-tree.java, I have no idea how to get method index
+in dispatch_table. I just know the value for IO.out_int method,
+so manually typed in.. If we figure out a way, that will be the end of this checkpoint.
+
+There is such a thing called AbstractTable.idTable. which will contain every method name.
+Just saying, I have no concrete idea...
+
+Sadly, I have no idea about the NT thing.
+I agree that it will be good to know how much we have to move the stack pointer.
+So far, as I implemented conditional expression, mul, plus, and eq, I have NEVER used
+any $s* register except $s0, which means we can always do addiu $sp $sp -12.
+I'm not sure about other expressions.
+
+
+See you soon.

@@ -673,14 +673,35 @@ class dispatch extends Expression {
       * @param s the output stream 
       * */
     public void code(PrintStream s) {
-        Enumeration e = actual.getElements();
-        Expression el = (Expression)e.nextElement();
-        int NT = CgenClassTable.numTempCounterFunctionEntry(el);
-        System.out.println(NT);
+        // Enumeration e = actual.getElements();
+        // Expression el = (Expression)e.nextElement();
+        // int NT = CgenClassTable.numTempCounterFunctionEntry(el);
+        // System.out.println(NT);
 
-        el.code(s);
+        // el.code(s);
 
+        for (Enumeration e = actual.getElements(); e.hasMoreElements();) {
+            Expression el = (Expression)e.nextElement();
+            el.code(s);
+            CgenSupport.emitPush(CgenSupport.ACC, s);
+            if ((expr instanceof object) && ((object)expr).name.getString().equals("self")) {
+                CgenSupport.emitMove(CgenSupport.ACC, CgenSupport.SELF, s);
+            } else {
+                expr.code(s);
+            }                                                                                   // this is dirty..
+            // for fucking null pointer exception
+            int nullity_check = GlobalVariable.getLabelIndex();
+            CgenSupport.emitBne(CgenSupport.ACC, CgenSupport.ZERO, nullity_check, s);
+            CgenSupport.emitLoadAddress(CgenSupport.ACC, CgenSupport.STRCONST_PREFIX + "0", s);
+            CgenSupport.emitLoadImm(CgenSupport.T1, 11, s);
+            CgenSupport.emitJal("_dispatch_abort", s);
+            CgenSupport.emitLabelDef(nullity_check, s);
 
+            int method_index = 5;                                                              // find it.
+            CgenSupport.emitLoad(CgenSupport.T1, 8 / 4, CgenSupport.ACC, s);
+            CgenSupport.emitLoad(CgenSupport.T1, method_index, CgenSupport.T1, s);
+            CgenSupport.emitJalr(CgenSupport.T1, s);
+        }
 
     }
 
@@ -733,6 +754,16 @@ class cond extends Expression {
       * @param s the output stream 
       * */
     public void code(PrintStream s) {
+        int fbranch = GlobalVariable.getLabelIndex();
+        int tbranch = GlobalVariable.getLabelIndex();
+        pred.code(s);
+        CgenSupport.emitLoad(CgenSupport.T1, 12 / 4, CgenSupport.ACC, s);
+        CgenSupport.emitBeqz(CgenSupport.T1, fbranch, s);
+        then_exp.code(s);
+        CgenSupport.emitBranch(tbranch, s);
+        CgenSupport.emitLabelDef(fbranch, s);
+        else_exp.code(s);
+        CgenSupport.emitLabelDef(tbranch, s);
     }
 
 
@@ -975,9 +1006,13 @@ class plus extends Expression {
         e1.code(s);
         CgenSupport.emitPush(CgenSupport.ACC, s);
         e2.code(s);
-        CgenSupport.emitLoad(CgenSupport.T1, 4, CgenSupport.SP, s);
-        CgenSupport.emitAdd(CgenSupport.ACC, CgenSupport.T1, CgenSupport.ACC, s);
-        CgenSupport.emitAddiu(CgenSupport.SP, CgenSupport.SP, 4, s);
+        CgenSupport.emitJal("Object.copy", s);
+        CgenSupport.emitLoad(CgenSupport.T2, 12 / 4, CgenSupport.ACC, s); //load e2's integer value in $t2
+        CgenSupport.emitLoad(CgenSupport.T1, 4 / 4, CgenSupport.SP, s); //load e1's integer pointer into $t1
+        CgenSupport.emitAddiu(CgenSupport.SP, CgenSupport.SP, 4, s);    // popopopopop
+        CgenSupport.emitLoad(CgenSupport.T1, 12 / 4, CgenSupport.T1, s); // load e1's integer value into $t1
+        CgenSupport.emitAdd(CgenSupport.T2, CgenSupport.T1, CgenSupport.T2, s); // multiply and save it in $t2
+        CgenSupport.emitStore(CgenSupport.T2, 12 / 4, CgenSupport.ACC, s);
 
     }
 
@@ -1080,9 +1115,13 @@ class mul extends Expression {
         e1.code(s);
         CgenSupport.emitPush(CgenSupport.ACC, s);
         e2.code(s);
-        CgenSupport.emitLoad(CgenSupport.T1, 4, CgenSupport.SP, s);
-        CgenSupport.emitMul(CgenSupport.ACC, CgenSupport.T1, CgenSupport.ACC, s);
-        CgenSupport.emitAddiu(CgenSupport.SP, CgenSupport.SP, 4, s);
+        CgenSupport.emitJal("Object.copy", s);
+        CgenSupport.emitLoad(CgenSupport.T2, 12 / 4, CgenSupport.ACC, s); //load e2's integer value in $t2
+        CgenSupport.emitLoad(CgenSupport.T1, 4 / 4, CgenSupport.SP, s); //load e1's integer pointer into $t1
+        CgenSupport.emitAddiu(CgenSupport.SP, CgenSupport.SP, 4, s);    // popopopopop
+        CgenSupport.emitLoad(CgenSupport.T1, 12 / 4, CgenSupport.T1, s); // load e1's integer value into $t1
+        CgenSupport.emitMul(CgenSupport.T2, CgenSupport.T1, CgenSupport.T2, s); // multiply and save it in $t2
+        CgenSupport.emitStore(CgenSupport.T2, 12 / 4, CgenSupport.ACC, s);
     }
 
 
@@ -1222,16 +1261,16 @@ class lt extends Expression {
       * @param s the output stream 
       * */
     public void code(PrintStream s) {
-            e1.code(s);
-            CgenSupport.emitPush(CgenSupport.ACC, s);
-            e2.code(s);
-            CgenSupport.emitLoad(CgenSupport.T1, 4, CgenSupport.SP, s);
-            CgenSupport.emitBlt(CgenSupport.ACC, CgenSupport.T1, 1, s);
-            CgenSupport.emitLoadBool(CgenSupport.ACC, BoolConst.falsebool, s);
-            //CgenSupport.emitJal(0, s);
-            CgenSupport.emitLabelDef(1, s);
-            CgenSupport.emitLoadBool(CgenSupport.ACC, BoolConst.truebool, s);
-            CgenSupport.emitLabelDef(0, s);
+            // e1.code(s);
+            // CgenSupport.emitPush(CgenSupport.ACC, s);
+            // e2.code(s);
+            // CgenSupport.emitLoad(CgenSupport.T1, 4, CgenSupport.SP, s);
+            // CgenSupport.emitBlt(CgenSupport.ACC, CgenSupport.T1, 1, s);
+            // CgenSupport.emitLoadBool(CgenSupport.ACC, BoolConst.falsebool, s);
+            // //CgenSupport.emitJal(0, s);
+            // CgenSupport.emitLabelDef(1, s);
+            // CgenSupport.emitLoadBool(CgenSupport.ACC, BoolConst.truebool, s);
+            // CgenSupport.emitLabelDef(0, s);
     }
 
 
@@ -1278,18 +1317,16 @@ class eq extends Expression {
       * @param s the output stream 
       * */
     public void code(PrintStream s) {
-
-        //todo - global counter: 11/7/15
+        // 11/19 seemingly complete code
             e1.code(s);
-            CgenSupport.emitPush(CgenSupport.ACC, s);
+            CgenSupport.emitPush(CgenSupport.ACC, s);                       // pupupupupupupupupup
             e2.code(s);
-            CgenSupport.emitLoad(CgenSupport.T1, 4, CgenSupport.SP, s);
-            CgenSupport.emitBeq(CgenSupport.ACC, CgenSupport.T1, 1, s);
-            CgenSupport.emitLoadBool(CgenSupport.ACC, BoolConst.falsebool, s);
-            //CgenSupport.emitJal(0, s);
-            CgenSupport.emitLabelDef(1, s);
+            CgenSupport.emitLoad(CgenSupport.T1, 4 / 4, CgenSupport.SP, s);
+            CgenSupport.emitAddiu(CgenSupport.SP, CgenSupport.SP, 4, s);     // popopopopopopopopop
+            CgenSupport.emitMove(CgenSupport.T2, CgenSupport.ACC, s);
             CgenSupport.emitLoadBool(CgenSupport.ACC, BoolConst.truebool, s);
-            CgenSupport.emitLabelDef(0, s);
+            CgenSupport.emitLoadBool(CgenSupport.A1, BoolConst.falsebool, s);
+            CgenSupport.emitJal("equality_test", s);
     }
 
 
@@ -1337,16 +1374,16 @@ class leq extends Expression {
       * */
     public void code(PrintStream s) {
 
-                    e1.code(s);
-            CgenSupport.emitPush(CgenSupport.ACC, s);
-            e2.code(s);
-            CgenSupport.emitLoad(CgenSupport.T1, 4, CgenSupport.SP, s);
-            CgenSupport.emitBleq(CgenSupport.ACC, CgenSupport.T1, 1, s);
-            CgenSupport.emitLoadBool(CgenSupport.ACC, BoolConst.falsebool, s);
-            //CgenSupport.emitJal(0, s);
-            CgenSupport.emitLabelDef(1, s);
-            CgenSupport.emitLoadBool(CgenSupport.ACC, BoolConst.truebool, s);
-            CgenSupport.emitLabelDef(0, s);
+            //         e1.code(s);
+            // CgenSupport.emitPush(CgenSupport.ACC, s);
+            // e2.code(s);
+            // CgenSupport.emitLoad(CgenSupport.T1, 4, CgenSupport.SP, s);
+            // CgenSupport.emitBleq(CgenSupport.ACC, CgenSupport.T1, 1, s);
+            // CgenSupport.emitLoadBool(CgenSupport.ACC, BoolConst.falsebool, s);
+            // //CgenSupport.emitJal(0, s);
+            // CgenSupport.emitLabelDef(1, s);
+            // CgenSupport.emitLoadBool(CgenSupport.ACC, BoolConst.truebool, s);
+            // CgenSupport.emitLabelDef(0, s);
     }
 
 
@@ -1677,3 +1714,9 @@ class object extends Expression {
 }
 
 
+class GlobalVariable {
+    public static int nextLabel = 0;
+    public static int getLabelIndex() {
+        return nextLabel++;
+    }
+}
