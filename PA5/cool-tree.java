@@ -700,12 +700,7 @@ class dispatch extends Expression {
             CgenSupport.emitJal("_dispatch_abort", s);
             CgenSupport.emitLabelDef(nullity_check, s);
 
-            System.out.println(name.getString());
-
             Vector<String> methods = GlobalData.class_method_map.get(exprclass);
-
-            System.out.println(methods);
-
 
             int method_index = methods.indexOf(name.getString());
             CgenSupport.emitLoad(CgenSupport.T1, 8 / 4, CgenSupport.ACC, s);

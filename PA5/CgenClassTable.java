@@ -535,6 +535,7 @@ class CgenClassTable extends SymbolTable {
 		//save the original class's name
 		String dispatchedClassName = curNDS.getName().getString();
 		Vector<String> concatenatedClassMethodStrings = new Vector<String>();
+		Vector<String> classMethodStrings = new Vector<String>();
 		while (curNDS.getParentNd() != null) {
 			AbstractSymbol className = curNDS.getName();
 			for (Enumeration e = curNDS.features.getElements(); e.hasMoreElements();) {
@@ -542,13 +543,15 @@ class CgenClassTable extends SymbolTable {
 				if (curElement instanceof method) {
 					method method = (method)curElement;
 					concatenatedClassMethodStrings.add(className.getString() + CgenSupport.METHOD_SEP + method.name.getString());
+					classMethodStrings.add(method.name.getString());
 				}
 			}
 			curNDS = curNDS.getParentNd();
 		}
 
 		Collections.reverse(concatenatedClassMethodStrings);								//SWAG
-		GlobalData.class_method_map.put(dispatchedClassName, concatenatedClassMethodStrings);
+		Collections.reverse(classMethodStrings);
+		GlobalData.class_method_map.put(dispatchedClassName, classMethodStrings);
 
 		str.print(dispatchedClassName + CgenSupport.DISPTAB_SUFFIX + CgenSupport.LABEL);
 		for (int j = 0; j < concatenatedClassMethodStrings.size() - 1; j += 1) {
