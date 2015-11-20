@@ -684,20 +684,25 @@ class dispatch extends Expression {
             Expression el = (Expression)e.nextElement();
             el.code(s);
             CgenSupport.emitPush(CgenSupport.ACC, s);
+            String exprclass;
             if ((expr instanceof object) && ((object)expr).name.getString().equals("self")) {
                 CgenSupport.emitMove(CgenSupport.ACC, CgenSupport.SELF, s);
+                exprclass = GlobalData.current_class;
             } else {
                 expr.code(s);
+                exprclass =  expr.get_type().getString();
             }                                                                                   // this is dirty..
             // for fucking null pointer exception
-            int nullity_check = GlobalVariable.getLabelIndex();
+            int nullity_check = GlobalData.getLabelIndex();
             CgenSupport.emitBne(CgenSupport.ACC, CgenSupport.ZERO, nullity_check, s);
             CgenSupport.emitLoadAddress(CgenSupport.ACC, CgenSupport.STRCONST_PREFIX + "0", s);
             CgenSupport.emitLoadImm(CgenSupport.T1, 11, s);
             CgenSupport.emitJal("_dispatch_abort", s);
             CgenSupport.emitLabelDef(nullity_check, s);
 
-            int method_index = 5;                                                              // find it.
+            
+            Vector<String> methods = GlobalData.class_method_map.get(exprclass);
+            int method_index = methods.indexOf(name.getString());
             CgenSupport.emitLoad(CgenSupport.T1, 8 / 4, CgenSupport.ACC, s);
             CgenSupport.emitLoad(CgenSupport.T1, method_index, CgenSupport.T1, s);
             CgenSupport.emitJalr(CgenSupport.T1, s);
@@ -754,8 +759,8 @@ class cond extends Expression {
       * @param s the output stream 
       * */
     public void code(PrintStream s) {
-        int fbranch = GlobalVariable.getLabelIndex();
-        int tbranch = GlobalVariable.getLabelIndex();
+        int fbranch = GlobalData.getLabelIndex();
+        int tbranch = GlobalData.getLabelIndex();
         pred.code(s);
         CgenSupport.emitLoad(CgenSupport.T1, 12 / 4, CgenSupport.ACC, s);
         CgenSupport.emitBeqz(CgenSupport.T1, fbranch, s);
@@ -1713,10 +1718,3 @@ class object extends Expression {
 
 }
 
-
-class GlobalVariable {
-    public static int nextLabel = 0;
-    public static int getLabelIndex() {
-        return nextLabel++;
-    }
-}

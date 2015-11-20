@@ -500,10 +500,40 @@ class CgenClassTable extends SymbolTable {
 	}
 
 	//                   - dispatch tables for each class
+	// for (int i = 0; i < nds.size(); i += 1) {
+	// 	CgenNode curNDS = (CgenNode)nds.get(i);
+	// 	//save the original class's name
+	// 	AbstractSymbol dispatchedClassName = curNDS.getName();
+	// 	Vector<String> concatenatedClassMethodStrings = new Vector<String>();
+	// 	while (curNDS.getParentNd() != null) {
+	// 		AbstractSymbol className = curNDS.getName();
+	// 		for (Enumeration e = curNDS.features.getElements(); e.hasMoreElements();) {
+	// 			Feature curElement = (Feature)e.nextElement();
+	// 			if (curElement instanceof method) {
+	// 				method method = (method)curElement;
+	// 				concatenatedClassMethodStrings.add(className.getString() + CgenSupport.METHOD_SEP + method.name.getString());
+	// 			}
+	// 		}
+	// 		curNDS = curNDS.getParentNd();
+	// 	}
+
+
+
+	// 	str.print(dispatchedClassName + CgenSupport.DISPTAB_SUFFIX + CgenSupport.LABEL);
+	// 	for (int j = concatenatedClassMethodStrings.size() - 1; j >= 0; j -= 1) {
+	// 		String concatenatedClassMethodString = concatenatedClassMethodStrings.get(j);
+	// 		str.println(CgenSupport.WORD + concatenatedClassMethodString);
+	// 	}
+				
+
+	// }
+
+
+///////////JAESEO'S EDITION
 	for (int i = 0; i < nds.size(); i += 1) {
 		CgenNode curNDS = (CgenNode)nds.get(i);
 		//save the original class's name
-		AbstractSymbol dispatchedClassName = curNDS.getName();
+		String dispatchedClassName = curNDS.getName().getString();
 		Vector<String> concatenatedClassMethodStrings = new Vector<String>();
 		while (curNDS.getParentNd() != null) {
 			AbstractSymbol className = curNDS.getName();
@@ -517,16 +547,20 @@ class CgenClassTable extends SymbolTable {
 			curNDS = curNDS.getParentNd();
 		}
 
-
+		Collections.reverse(concatenatedClassMethodStrings);								//SWAG
+		GlobalData.class_method_map.put(dispatchedClassName, concatenatedClassMethodStrings);
 
 		str.print(dispatchedClassName + CgenSupport.DISPTAB_SUFFIX + CgenSupport.LABEL);
-		for (int j = concatenatedClassMethodStrings.size() - 1; j >= 0; j -= 1) {
+		for (int j = 0; j < concatenatedClassMethodStrings.size() - 1; j += 1) {
+
 			String concatenatedClassMethodString = concatenatedClassMethodStrings.get(j);
 			str.println(CgenSupport.WORD + concatenatedClassMethodString);
 		}
 				
 
 	}
+/////////////////////////////
+
 
 
 	for (int i = 0; i < nds.size(); i += 1) {
@@ -589,26 +623,28 @@ class CgenClassTable extends SymbolTable {
 		str.print(CgenSupport.LABEL);
 		CgenSupport.emitAddiu(CgenSupport.SP, CgenSupport.SP, -12, str);
 		CgenSupport.emitStore(CgenSupport.FP, 12/4, CgenSupport.SP, str);
-		CgenSupport.emitStore("$s0", 8/4, CgenSupport.SP, str);
+		CgenSupport.emitStore(CgenSupport.SELF, 8/4, CgenSupport.SP, str);
 		CgenSupport.emitStore(CgenSupport.RA, 4/4, CgenSupport.SP, str);
 		CgenSupport.emitAddiu(CgenSupport.FP, CgenSupport.SP, 16, str);
-		CgenSupport.emitMove("$s0", CgenSupport.ACC, str);
+		CgenSupport.emitMove(CgenSupport.SELF, CgenSupport.ACC, str);
 		//Object_init skips this line
 		if (!curNDS.getName().getString().equals(TreeConstants.Object_.getString())) {
 			CgenSupport.emitJal(curNDS.getParentNd().getName().getString() + CgenSupport.CLASSINIT_SUFFIX, str);
 
 		}
-		CgenSupport.emitMove(CgenSupport.ACC, "$s0", str);
+		CgenSupport.emitMove(CgenSupport.ACC, CgenSupport.SELF, str);
 		CgenSupport.emitLoad(CgenSupport.FP, 12/4, CgenSupport.SP, str);
-		CgenSupport.emitLoad("$s0", 8/4, CgenSupport.SP, str);
+		CgenSupport.emitLoad(CgenSupport.SELF, 8/4, CgenSupport.SP, str);
 		CgenSupport.emitLoad(CgenSupport.RA, 4/4, CgenSupport.SP, str);
 		CgenSupport.emitAddiu(CgenSupport.SP, CgenSupport.SP, 12, str);
 		CgenSupport.emitReturn(str);
 
 	}
 
+
 	for (int i = 0; i < nds.size(); i += 1) {
 		CgenNode curNDS = (CgenNode)nds.get(i);
+		GlobalData.current_class = curNDS.getName().getString();
 		if (curNDS.getName().getString().equals("Object")) {
 			continue;
 		} else if (curNDS.getName().getString().equals("IO")) {
@@ -674,4 +710,17 @@ class CgenClassTable extends SymbolTable {
     }
 }
 			  
+
+
+class GlobalData {
+    public static int nextLabel = 0;
+    public static int getLabelIndex() {
+        return nextLabel++;
+    }
+    public static String current_class;
+
+    public static HashMap<String, Vector<String>> class_method_map = new HashMap<String, Vector<String>>();
+    public static HashMap<String, Vector<String>> class_attr_map = new HashMap<String, Vector<String>>();
+}
+
     
