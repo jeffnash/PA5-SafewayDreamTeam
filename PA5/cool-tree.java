@@ -1068,9 +1068,13 @@ class sub extends Expression {
         e1.code(s);
         CgenSupport.emitPush(CgenSupport.ACC, s);
         e2.code(s);
-        CgenSupport.emitLoad(CgenSupport.T1, 4, CgenSupport.SP, s);
-        CgenSupport.emitSub(CgenSupport.ACC, CgenSupport.T1, CgenSupport.ACC, s);
-        CgenSupport.emitAddiu(CgenSupport.SP, CgenSupport.SP, 4, s);
+        CgenSupport.emitJal("Object.copy", s);
+        CgenSupport.emitLoad(CgenSupport.T2, 12 / 4, CgenSupport.ACC, s); //load e2's integer value in $t2
+        CgenSupport.emitLoad(CgenSupport.T1, 4 / 4, CgenSupport.SP, s); //load e1's integer pointer into $t1
+        CgenSupport.emitAddiu(CgenSupport.SP, CgenSupport.SP, 4, s);    // popopopopop
+        CgenSupport.emitLoad(CgenSupport.T1, 12 / 4, CgenSupport.T1, s); // load e1's integer value into $t1
+        CgenSupport.emitSub(CgenSupport.T2, CgenSupport.T1, CgenSupport.T2, s); // multiply and save it in $t2
+        CgenSupport.emitStore(CgenSupport.T2, 12 / 4, CgenSupport.ACC, s);
     }
 
 
@@ -1176,9 +1180,13 @@ class divide extends Expression {
         e1.code(s);
         CgenSupport.emitPush(CgenSupport.ACC, s);
         e2.code(s);
-        CgenSupport.emitLoad(CgenSupport.T1, 4, CgenSupport.SP, s);
-        CgenSupport.emitDiv(CgenSupport.ACC, CgenSupport.T1, CgenSupport.ACC, s);
-        CgenSupport.emitAddiu(CgenSupport.SP, CgenSupport.SP, 4, s);
+        CgenSupport.emitJal("Object.copy", s);
+        CgenSupport.emitLoad(CgenSupport.T2, 12 / 4, CgenSupport.ACC, s); //load e2's integer value in $t2
+        CgenSupport.emitLoad(CgenSupport.T1, 4 / 4, CgenSupport.SP, s); //load e1's integer pointer into $t1
+        CgenSupport.emitAddiu(CgenSupport.SP, CgenSupport.SP, 4, s);    // popopopopop
+        CgenSupport.emitLoad(CgenSupport.T1, 12 / 4, CgenSupport.T1, s); // load e1's integer value into $t1
+        CgenSupport.emitDiv(CgenSupport.T2, CgenSupport.T1, CgenSupport.T2, s); // multiply and save it in $t2
+        CgenSupport.emitStore(CgenSupport.T2, 12 / 4, CgenSupport.ACC, s);
     }
 
 
