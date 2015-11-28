@@ -679,34 +679,35 @@ class dispatch extends Expression {
         // System.out.println(NT);
 
         // el.code(s);
-
         for (Enumeration e = actual.getElements(); e.hasMoreElements();) {
             Expression el = (Expression)e.nextElement();
             el.code(s);
             CgenSupport.emitPush(CgenSupport.ACC, s);
-            String exprclass;
-            if ((expr instanceof object) && ((object)expr).name.getString().equals("self")) {
-                CgenSupport.emitMove(CgenSupport.ACC, CgenSupport.SELF, s);
-                exprclass = GlobalData.current_class;
-            } else {
-                expr.code(s);
-                exprclass =  expr.get_type().getString();
-            }                                                                                   // this is dirty..
-            // for fucking null pointer exception
-            int nullity_check = GlobalData.getLabelIndex();
-            CgenSupport.emitBne(CgenSupport.ACC, CgenSupport.ZERO, nullity_check, s);
-            CgenSupport.emitLoadAddress(CgenSupport.ACC, CgenSupport.STRCONST_PREFIX + "0", s);
-            CgenSupport.emitLoadImm(CgenSupport.T1, 11, s);
-            CgenSupport.emitJal("_dispatch_abort", s);
-            CgenSupport.emitLabelDef(nullity_check, s);
-
-            Vector<String> methods = GlobalData.class_method_map.get(exprclass);
-
-            int method_index = methods.indexOf(name.getString());
-            CgenSupport.emitLoad(CgenSupport.T1, 8 / 4, CgenSupport.ACC, s);
-            CgenSupport.emitLoad(CgenSupport.T1, method_index, CgenSupport.T1, s);
-            CgenSupport.emitJalr(CgenSupport.T1, s);
         }
+
+        String exprclass;
+        //to-do: move this to object
+        if ((expr instanceof object) && ((object)expr).name.getString().equals("self")) {
+            CgenSupport.emitMove(CgenSupport.ACC, CgenSupport.SELF, s);
+            exprclass = GlobalData.current_class;
+        } else {
+            expr.code(s);
+            exprclass =  expr.get_type().getString();
+        }                                                                                   // this is dirty..
+        // for fucking null pointer exception
+        int nullity_check = GlobalData.getLabelIndex();
+        CgenSupport.emitBne(CgenSupport.ACC, CgenSupport.ZERO, nullity_check, s);
+        CgenSupport.emitLoadAddress(CgenSupport.ACC, CgenSupport.STRCONST_PREFIX + "0", s);
+        CgenSupport.emitLoadImm(CgenSupport.T1, 11, s);
+        CgenSupport.emitJal("_dispatch_abort", s);
+        CgenSupport.emitLabelDef(nullity_check, s);
+
+        Vector<String> methods = GlobalData.class_method_map.get(exprclass);
+
+        int method_index = methods.indexOf(name.getString());
+        CgenSupport.emitLoad(CgenSupport.T1, 8 / 4, CgenSupport.ACC, s);
+        CgenSupport.emitLoad(CgenSupport.T1, method_index, CgenSupport.T1, s);
+        CgenSupport.emitJalr(CgenSupport.T1, s);
 
     }
 
@@ -906,6 +907,10 @@ class block extends Expression {
       * @param s the output stream 
       * */
     public void code(PrintStream s) {
+        for (Enumeration e = body.getElements(); e.hasMoreElements();) {
+            Expression exp = (Expression)e.nextElement();
+            exp.code(s);
+        }
     }
 
 
@@ -1603,6 +1608,9 @@ class new_ extends Expression {
       * @param s the output stream 
       * */
     public void code(PrintStream s) {
+        CgenSupport.emitLoadAddress(CgenSupport.ACC, type_name.getString() + CgenSupport.PROTOBJ_SUFFIX, s);
+        CgenSupport.emitJal("Object.copy", s);
+        CgenSupport.emitJal(type_name.getString() + CgenSupport.CLASSINIT_SUFFIX, s);
     }
 
 
