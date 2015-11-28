@@ -541,9 +541,12 @@ class CgenClassTable extends SymbolTable {
 			for (Enumeration e = curNDS.features.getElements(); e.hasMoreElements();) {
 				Feature curElement = (Feature)e.nextElement();
 				if (curElement instanceof method) {
-					method method = (method)curElement;
-					concatenatedClassMethodStrings.add(className.getString() + CgenSupport.METHOD_SEP + method.name.getString());
-					classMethodStrings.add(method.name.getString());
+					method curMethod = (method)curElement;
+					boolean alreadyThere = classMethodStrings.indexOf(curMethod.name.getString()) != -1;
+					if (!alreadyThere) {
+						concatenatedClassMethodStrings.add(className.getString() + CgenSupport.METHOD_SEP + curMethod.name.getString());
+						classMethodStrings.add(curMethod.name.getString());
+					}
 				}
 			}
 			curNDS = curNDS.getParentNd();
@@ -554,7 +557,7 @@ class CgenClassTable extends SymbolTable {
 		GlobalData.class_method_map.put(dispatchedClassName, classMethodStrings);
 
 		str.print(dispatchedClassName + CgenSupport.DISPTAB_SUFFIX + CgenSupport.LABEL);
-		for (int j = 0; j < concatenatedClassMethodStrings.size() - 1; j += 1) {
+		for (int j = 0; j < concatenatedClassMethodStrings.size(); j += 1) {
 
 			String concatenatedClassMethodString = concatenatedClassMethodStrings.get(j);
 			str.println(CgenSupport.WORD + concatenatedClassMethodString);
