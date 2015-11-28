@@ -18,8 +18,23 @@ To-do list (post Thanksgiving feast):
 
 -Attribute initialization. So far, we always used default value, but that's not always the case.
  Need to modify init 
- => Done (in CgenSupport.java. This is the most bizarre code ever... but I believe it works correctly)
+ => Done
 
 
 + Assignment => Done
 + Object => Done
+
+- isvoid
+- complement
+- leq, lt
+- negation
+- let
+- case
+- while
+- static dispatch
+- runtime error checking
+- garbage collection
+
+
+You'll see the most bizarre code in the past few commits.
+Ask me when you have questions.
