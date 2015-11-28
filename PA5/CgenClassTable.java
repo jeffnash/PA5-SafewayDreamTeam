@@ -627,6 +627,7 @@ class CgenClassTable extends SymbolTable {
 		CgenNode curNDS = (CgenNode)nds.get(i);
 		CgenSupport.emitInitRef(curNDS.getName(), str);
 		str.print(CgenSupport.LABEL);
+
 		CgenSupport.emitAddiu(CgenSupport.SP, CgenSupport.SP, -12, str);
 		CgenSupport.emitStore(CgenSupport.FP, 12/4, CgenSupport.SP, str);
 		CgenSupport.emitStore(CgenSupport.SELF, 8/4, CgenSupport.SP, str);
@@ -666,10 +667,11 @@ class CgenClassTable extends SymbolTable {
 			Feature curElement = (Feature)e.nextElement();
 			if (curElement instanceof method) {
 				method curMeth = (method)curElement;
+				int paramNumbers = curMeth.formals.getLength();
 				CgenSupport.emitMethodRef(curNDS.getName(), curMeth.name, str);
 				str.print(CgenSupport.LABEL);
-				int NT = 1;
-				int offset = (NT + NT + 3) * 4;
+				int NT = paramNumbers;
+				int offset = (NT + 3) * 4;
 		        /* 12 is the amount of space we need for the temporaries in this frame = WORD_SIZE*(1 + NT), 
 		                # alternatively, this is the max NT_offset that is valid = -12
 		                # we adjust the stack pointer first by convention 
