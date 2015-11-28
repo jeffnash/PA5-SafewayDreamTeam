@@ -663,7 +663,9 @@ class CgenClassTable extends SymbolTable {
 		} else if (curNDS.getName().getString().equals("Bool")) {
 			continue;
 		}
-
+		if (curNDS.getName().getString().equals("Main")) {
+			curNDS.dump_with_types(System.out, 0);
+		}
 		for (Enumeration e = curNDS.features.getElements(); e.hasMoreElements();) {
 			Feature curElement = (Feature)e.nextElement();
 			if (curElement instanceof method) {

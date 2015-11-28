@@ -3,7 +3,7 @@ class Main inherits IO {
   b : String <- "bbb";
   c : Int <- 188;
   main(): Object {
-    {1 = 2; (new Cat).d(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);}
+    {1 = 2; (new Cat).d(c, 2, 3, 4, 5, 6, 7, 8, 9, 10);}
   };
 };
 

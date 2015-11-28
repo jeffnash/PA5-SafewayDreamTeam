@@ -1,20 +1,8 @@
-To-do list:
-11/14 after starbucks
--Figure out how to get indices of default values for prototype objects
--Object init
-- labels!
-- if / then / else!
+To-do list (post Thanksgiving feast):
+- callee side things
+	Methods to edit:
+		dispatch (cool-tree) after the enumeration -- line ~704
+		will need a map for matching parameter --> actual address
+- when passing an variable into a method dispatch argument instead of an integer/string/bool etc constant, we ewill need to look up the value of that attribute. this is done in _object:
+	-also need to update attributes whose values are redifined in method (proably done in assignment code() method)
 
-11/14/15 morning
-- each object's disp tab
-- add attributes during prototype object generation
-- figure out object length
-- init generation
-
-
-
-
-- Line 412 in CgenClassTable (still working 11/14/15)
-- line 71 in BoolConst.java
-- Hella methods in cool-tree.java
-- Line 420 in CgenClassTable

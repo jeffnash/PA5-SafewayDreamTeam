@@ -11,6 +11,7 @@
 import java.util.Enumeration;
 import java.io.PrintStream;
 import java.util.Vector;
+import java.util.HashMap;
 
 
 /** Defines simple phylum Program */
@@ -679,10 +680,14 @@ class dispatch extends Expression {
         // System.out.println(NT);
 
         // el.code(s);
+        HashMap<Expression, Integer> parameterIndexMap = new HashMap<Expression, Integer>();
+        Integer indexCount = 0;
         for (Enumeration e = actual.getElements(); e.hasMoreElements();) {
             Expression el = (Expression)e.nextElement();
+            parameterIndexMap.put(el, indexCount);
             el.code(s);
             CgenSupport.emitPush(CgenSupport.ACC, s);
+            indexCount += 1;
         }
 
         String exprclass;
@@ -690,6 +695,9 @@ class dispatch extends Expression {
         if ((expr instanceof object) && ((object)expr).name.getString().equals("self")) {
             CgenSupport.emitMove(CgenSupport.ACC, CgenSupport.SELF, s);
             exprclass = GlobalData.current_class;
+
+            //look up object's acutal value in the class attribute map, obtaining the containing class
+            // from some sort of class method map
         } else {
             expr.code(s);
             exprclass =  expr.get_type().getString();
@@ -1729,6 +1737,8 @@ class object extends Expression {
       * @param s the output stream 
       * */
     public void code(PrintStream s) {
+        
+
     }
 
 
