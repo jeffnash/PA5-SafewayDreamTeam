@@ -559,6 +559,23 @@ class assign extends Expression {
       * @param s the output stream 
       * */
     public void code(PrintStream s) {
+        Vector<String> attrVector = GlobalData.class_attr_map.get(GlobalData.current_class);
+        if (attrVector == null) {
+            System.out.println("Something's wrong");
+        }
+
+        int attrIndex = attrVector.indexOf(name.getString());
+        int formalIndex = GlobalData.cur_method_parameters.indexOf(name.getString());
+
+        expr.code(s);
+
+        if (formalIndex != -1) {
+            CgenSupport.emitStore(CgenSupport.ACC, formalIndex, CgenSupport.FP, s);
+        } else if (attrIndex != -1) {
+            CgenSupport.emitStore(CgenSupport.ACC, attrIndex + 3, CgenSupport.SELF, s);
+        } else {
+            System.out.println("Something's worng");
+        }
     }
 
 
@@ -680,6 +697,11 @@ class dispatch extends Expression {
         // System.out.println(NT);
 
         // el.code(s);
+
+
+
+        /* We shouldn't make this map here. 
+           We should make this is CgenClassTable and make it globally accessible. (which is taken care of)  */
         HashMap<Expression, Integer> parameterIndexMap = new HashMap<Expression, Integer>();
         Integer indexCount = 0;
         for (Enumeration e = actual.getElements(); e.hasMoreElements();) {
@@ -706,7 +728,7 @@ class dispatch extends Expression {
         int nullity_check = GlobalData.getLabelIndex();
         CgenSupport.emitBne(CgenSupport.ACC, CgenSupport.ZERO, nullity_check, s);
         CgenSupport.emitLoadAddress(CgenSupport.ACC, CgenSupport.STRCONST_PREFIX + "0", s);
-        CgenSupport.emitLoadImm(CgenSupport.T1, 11, s);
+        CgenSupport.emitLoadImm(CgenSupport.T1, lineNumber, s);
         CgenSupport.emitJal("_dispatch_abort", s);
         CgenSupport.emitLabelDef(nullity_check, s);
 
@@ -1737,10 +1759,21 @@ class object extends Expression {
       * @param s the output stream 
       * */
     public void code(PrintStream s) {
-        
+        Vector<String> attrVector = GlobalData.class_attr_map.get(GlobalData.current_class);
+        if (attrVector == null) {
+            System.out.println("Something's wrong");
+        }
 
+        int attrIndex = attrVector.indexOf(name.getString());
+        int formalIndex = GlobalData.cur_method_parameters.indexOf(name.getString());
+
+        if (formalIndex != -1) {
+            CgenSupport.emitLoad(CgenSupport.ACC, formalIndex, CgenSupport.FP, s);
+        } else if (attrIndex != -1) {
+            CgenSupport.emitLoad(CgenSupport.ACC, attrIndex + 3, CgenSupport.SELF, s);
+        } else {
+            System.out.println("Something's worng");
+        }
     }
-
-
 }
 

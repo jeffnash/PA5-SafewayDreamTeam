@@ -499,37 +499,7 @@ class CgenClassTable extends SymbolTable {
 		str.println(CgenSupport.WORD + curNDS.getName().toString() + CgenSupport.CLASSINIT_SUFFIX);
 	}
 
-	//                   - dispatch tables for each class
-	// for (int i = 0; i < nds.size(); i += 1) {
-	// 	CgenNode curNDS = (CgenNode)nds.get(i);
-	// 	//save the original class's name
-	// 	AbstractSymbol dispatchedClassName = curNDS.getName();
-	// 	Vector<String> concatenatedClassMethodStrings = new Vector<String>();
-	// 	while (curNDS.getParentNd() != null) {
-	// 		AbstractSymbol className = curNDS.getName();
-	// 		for (Enumeration e = curNDS.features.getElements(); e.hasMoreElements();) {
-	// 			Feature curElement = (Feature)e.nextElement();
-	// 			if (curElement instanceof method) {
-	// 				method method = (method)curElement;
-	// 				concatenatedClassMethodStrings.add(className.getString() + CgenSupport.METHOD_SEP + method.name.getString());
-	// 			}
-	// 		}
-	// 		curNDS = curNDS.getParentNd();
-	// 	}
 
-
-
-	// 	str.print(dispatchedClassName + CgenSupport.DISPTAB_SUFFIX + CgenSupport.LABEL);
-	// 	for (int j = concatenatedClassMethodStrings.size() - 1; j >= 0; j -= 1) {
-	// 		String concatenatedClassMethodString = concatenatedClassMethodStrings.get(j);
-	// 		str.println(CgenSupport.WORD + concatenatedClassMethodString);
-	// 	}
-				
-
-	// }
-
-
-///////////JAESEO'S EDITION
 	for (int i = 0; i < nds.size(); i += 1) {
 		CgenNode curNDS = (CgenNode)nds.get(i);
 		//save the original class's name
@@ -547,7 +517,7 @@ class CgenClassTable extends SymbolTable {
 						concatenatedClassMethodStrings.add(className.getString() + CgenSupport.METHOD_SEP + curMethod.name.getString());
 						classMethodStrings.add(curMethod.name.getString());
 					}
-				}
+				} 
 			}
 			curNDS = curNDS.getParentNd();
 		}
@@ -571,45 +541,72 @@ class CgenClassTable extends SymbolTable {
 
 	for (int i = 0; i < nds.size(); i += 1) {
 		str.println(CgenSupport.WORD + "-1");
+
 		CgenNode curNDS = (CgenNode)nds.get(i);
+		CgenNode curNDS2 = (CgenNode)nds.get(i); // this is for getting attribute count
 		CgenSupport.emitProtObjRef(curNDS.getName(), str);
+		String protClassName = curNDS.getName().getString();
 		/* The first three 32-bit words of each object are assumed to contain a class tag, the object size, and a
 			pointer for dispatch information. In addition, the garbage collector requires that the word immediately
 			before an object contain -1; this word is not part of the object.*/
 
 		str.println(CgenSupport.LABEL + CgenSupport.WORD + i);
 		int attrCount = 3;
-		//object size...how do we get this: (11/14)?
-		for (Enumeration e = curNDS.features.getElements(); e.hasMoreElements();) {
-			Feature curElement = (Feature)e.nextElement();
-			if (curElement instanceof attr) {
-				attrCount += 1;
+		while (curNDS2.getParentNd() != null) {
+			for (Enumeration e = curNDS2.features.getElements(); e.hasMoreElements();) {
+				Feature curElement = (Feature)e.nextElement();
+				if (curElement instanceof attr) {
+					attrCount += 1;
+				}
 			}
+			curNDS2 = curNDS2.getParentNd();
 		}
+
 		str.println(CgenSupport.WORD + attrCount);
 		str.println(CgenSupport.WORD + curNDS.getName() + CgenSupport.DISPTAB_SUFFIX);
 		//we need to add attributes (11/14)
-
-		for (Enumeration e = curNDS.features.getElements(); e.hasMoreElements();) {
-			Feature curElement = (Feature)e.nextElement();
-			if (curElement instanceof attr) {
-				if (((attr)curElement).type_decl.getString().equals(TreeConstants.Bool.getString())) {
-					str.println(CgenSupport.WORD + CgenSupport.BOOLCONST_PREFIX + "0");
-				} else if (((attr)curElement).type_decl.getString().equals(TreeConstants.Int.getString())) {
-					int indexofzero = ((IntSymbol)AbstractTable.inttable.lookup("0")).index;
-					str.println(CgenSupport.WORD + CgenSupport.INTCONST_PREFIX + indexofzero);
-				} else if (((attr)curElement).type_decl.getString().equals(TreeConstants.Str.getString())) {
-					int indexofemptystring = ((StringSymbol)AbstractTable.stringtable.lookup("")).index;
-					str.println(CgenSupport.WORD + CgenSupport.STRCONST_PREFIX + indexofemptystring);
-				} else {
-					str.println(CgenSupport.WORD + "0");
+		Vector<String> classAttrStrings = new Vector<String>();
+		Vector<attr> classAttr = new Vector<attr>();
+		Vector<attr> classInitAttr = new Vector<attr>();
+		boolean init_set = false;
+		while (curNDS.getParentNd() != null) {
+			for (Enumeration e = curNDS.features.getElements(); e.hasMoreElements();) {
+				Feature curElement = (Feature)e.nextElement();
+				if (curElement instanceof attr) {
+					attr curAttr = (attr)curElement;
+					classAttrStrings.add(curAttr.name.getString());
+					classAttr.add(curAttr);
+					if (!init_set) {
+						classInitAttr.add(curAttr);
+					}
 				}
 			}
+			if (!init_set) {
+				GlobalData.class_attr_init_map.put(protClassName, classInitAttr);
+				init_set = true;
+			}
+			curNDS = curNDS.getParentNd();
 		}
 
+		Collections.reverse(classAttrStrings);
+		Collections.reverse(classAttr);
+		GlobalData.class_attr_map.put(protClassName, classAttrStrings);
+		
 
-		//ref to prototype obj default value in stringtable
-		//str.print(CgenSupport)
+		for (int j = 0; j < classAttr.size(); j += 1) {
+			attr curAttr = classAttr.get(j);
+			if (curAttr.type_decl.getString().equals(TreeConstants.Bool.getString())) {
+				str.println(CgenSupport.WORD + CgenSupport.BOOLCONST_PREFIX + "0");
+			} else if (curAttr.type_decl.getString().equals(TreeConstants.Int.getString())) {
+				int indexofzero = ((IntSymbol)AbstractTable.inttable.lookup("0")).index;
+				str.println(CgenSupport.WORD + CgenSupport.INTCONST_PREFIX + indexofzero);
+			} else if (curAttr.type_decl.getString().equals(TreeConstants.Str.getString())) {
+				int indexofemptystring = ((StringSymbol)AbstractTable.stringtable.lookup("")).index;
+				str.println(CgenSupport.WORD + CgenSupport.STRCONST_PREFIX + indexofemptystring);
+			} else {
+				str.println(CgenSupport.WORD + "0");
+			}
+		}
 	}
 	
 
@@ -637,8 +634,21 @@ class CgenClassTable extends SymbolTable {
 		//Object_init skips this line
 		if (!curNDS.getName().getString().equals(TreeConstants.Object_.getString())) {
 			CgenSupport.emitJal(curNDS.getParentNd().getName().getString() + CgenSupport.CLASSINIT_SUFFIX, str);
-
 		}
+
+		Vector<attr> attrInitVector = GlobalData.class_attr_init_map.get(curNDS.name.getString());
+		Vector<String> attrVector = GlobalData.class_attr_map.get(curNDS.name.getString());
+		for (int j = 0; j < attrInitVector.size(); j++) {
+			attr initAttr = attrInitVector.get(j);
+			if (initAttr.init instanceof no_expr) {
+				continue;
+			}
+			initAttr.init.code(str);
+			int realIndex = attrVector.indexOf(initAttr.name.getString());
+			CgenSupport.emitStore(CgenSupport.ACC, realIndex + 3, CgenSupport.SELF, str);
+		}
+
+
 		CgenSupport.emitMove(CgenSupport.ACC, CgenSupport.SELF, str);
 		CgenSupport.emitLoad(CgenSupport.FP, 12/4, CgenSupport.SP, str);
 		CgenSupport.emitLoad(CgenSupport.SELF, 8/4, CgenSupport.SP, str);
@@ -663,18 +673,24 @@ class CgenClassTable extends SymbolTable {
 		} else if (curNDS.getName().getString().equals("Bool")) {
 			continue;
 		}
-		if (curNDS.getName().getString().equals("Main")) {
+		if (curNDS.getName().getString().equals("Cat")) {
 			curNDS.dump_with_types(System.out, 0);
 		}
 		for (Enumeration e = curNDS.features.getElements(); e.hasMoreElements();) {
 			Feature curElement = (Feature)e.nextElement();
 			if (curElement instanceof method) {
 				method curMeth = (method)curElement;
+				GlobalData.cur_method_parameters.clear();
+				for (Enumeration f = curMeth.formals.getElements(); f.hasMoreElements();) {
+					formalc formal = (formalc)f.nextElement();
+					GlobalData.cur_method_parameters.add(formal.name.getString());
+				}
+				Collections.reverse(GlobalData.cur_method_parameters);
 				int paramNumbers = curMeth.formals.getLength();
 				CgenSupport.emitMethodRef(curNDS.getName(), curMeth.name, str);
 				str.print(CgenSupport.LABEL);
 				int NT = paramNumbers;
-				int offset = (NT + 3) * 4;
+				int offset = 3 * 4;
 		        /* 12 is the amount of space we need for the temporaries in this frame = WORD_SIZE*(1 + NT), 
 		                # alternatively, this is the max NT_offset that is valid = -12
 		                # we adjust the stack pointer first by convention 
@@ -691,7 +707,6 @@ class CgenClassTable extends SymbolTable {
 		        CgenSupport.emitAddiu(CgenSupport.FP, CgenSupport.SP, 4 * 4, str);
 		        CgenSupport.emitMove(CgenSupport.SELF, CgenSupport.ACC, str);
 
-
 				curMeth.expr.code(str);
 
 				        //epilogue
@@ -700,7 +715,7 @@ class CgenClassTable extends SymbolTable {
 		        CgenSupport.emitLoad(CgenSupport.SELF, (2 * 4) / 4, CgenSupport.SP, str);
 		        CgenSupport.emitLoad(CgenSupport.RA, (1 * 4) / 4, CgenSupport.SP, str);
 
-		        CgenSupport.emitAddiu(CgenSupport.SP, CgenSupport.SP, offset, str);
+		        CgenSupport.emitAddiu(CgenSupport.SP, CgenSupport.SP, offset + paramNumbers * 4, str);
 		        CgenSupport.emitReturn(str);
 				// curMeth.expr.dump_with_types(str, 0);
 
@@ -732,6 +747,8 @@ class GlobalData {
 
     public static HashMap<String, Vector<String>> class_method_map = new HashMap<String, Vector<String>>();
     public static HashMap<String, Vector<String>> class_attr_map = new HashMap<String, Vector<String>>();
+    public static HashMap<String, Vector<attr>> class_attr_init_map = new HashMap<String, Vector<attr>>();
+    public static Vector<String> cur_method_parameters = new Vector<String>();
 }
 
     
