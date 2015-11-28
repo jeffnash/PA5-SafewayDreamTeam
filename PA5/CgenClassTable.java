@@ -535,7 +535,6 @@ class CgenClassTable extends SymbolTable {
 				
 
 	}
-/////////////////////////////
 
 
 
@@ -570,15 +569,19 @@ class CgenClassTable extends SymbolTable {
 		Vector<attr> classInitAttr = new Vector<attr>();
 		boolean init_set = false;
 		while (curNDS.getParentNd() != null) {
+			Vector<attr> tempVector = new Vector<attr>();
 			for (Enumeration e = curNDS.features.getElements(); e.hasMoreElements();) {
 				Feature curElement = (Feature)e.nextElement();
 				if (curElement instanceof attr) {
-					attr curAttr = (attr)curElement;
-					classAttrStrings.add(curAttr.name.getString());
-					classAttr.add(curAttr);
-					if (!init_set) {
-						classInitAttr.add(curAttr);
-					}
+					tempVector.add((attr)curElement);
+				}
+			}
+			for (int j = tempVector.size() - 1; j >= 0; j--) {
+				attr curAttr = tempVector.get(j);
+				classAttrStrings.add(curAttr.name.getString());
+				classAttr.add(curAttr);
+				if (!init_set) {
+					classInitAttr.add(curAttr);
 				}
 			}
 			if (!init_set) {
