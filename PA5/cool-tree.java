@@ -1365,7 +1365,7 @@ class eq extends Expression {
       * @param s the output stream 
       * */
     public void code(PrintStream s) {
-        // 11/19 seemingly complete code
+            int same_object = GlobalData.getLabelIndex();
             e1.code(s);
             CgenSupport.emitPush(CgenSupport.ACC, s);                       // pupupupupupupupupup
             e2.code(s);
@@ -1373,8 +1373,10 @@ class eq extends Expression {
             CgenSupport.emitAddiu(CgenSupport.SP, CgenSupport.SP, 4, s);     // popopopopopopopopop
             CgenSupport.emitMove(CgenSupport.T2, CgenSupport.ACC, s);
             CgenSupport.emitLoadBool(CgenSupport.ACC, BoolConst.truebool, s);
+            CgenSupport.emitBeq(CgenSupport.T1, CgenSupport.T2, same_object,s);
             CgenSupport.emitLoadBool(CgenSupport.A1, BoolConst.falsebool, s);
             CgenSupport.emitJal("equality_test", s);
+            CgenSupport.emitLabelDef(same_object, s);
     }
 
 
