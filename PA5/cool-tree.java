@@ -1457,12 +1457,12 @@ class leq extends Expression {
                 CgenSupport.emitLoad("$v1", CgenSupport.T2, 3, s);
                 //bgt $v1 $v0 _leq_false 
                 CgenSupport.emitBleq(String src1, String src2, int label, PrintStream s);
-
+/*
             _leq_true:
                 jr  $ra     # return true
             _leq_false:
                 move    $a0 $a1     # move false into accumulator
-                jr  $ra
+                jr  $ra*/
     }
 
 
