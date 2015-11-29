@@ -1421,17 +1421,48 @@ class leq extends Expression {
       * @param s the output stream 
       * */
     public void code(PrintStream s) {
+            e1.code(s);
+            CgenSupport.emitPush(CgenSupport.ACC, s);                       // pupupupupupupupupup
+            e2.code(s);
+            CgenSupport.emitLoad(CgenSupport.T1, 4 / 4, CgenSupport.SP, s);
+            CgenSupport.emitAddiu(CgenSupport.SP, CgenSupport.SP, 4, s);     // popopopopopopopopop
+            CgenSupport.emitMove(CgenSupport.T2, CgenSupport.ACC, s);
+            CgenSupport.emitLoadBool(CgenSupport.ACC, BoolConst.truebool, s);
+            CgenSupport.emitLoadBool(CgenSupport.A1, BoolConst.falsebool, s);
+            CgenSupport.emitJal("equality_test", s);
 
-            //         e1.code(s);
-            // CgenSupport.emitPush(CgenSupport.ACC, s);
-            // e2.code(s);
-            // CgenSupport.emitLoad(CgenSupport.T1, 4, CgenSupport.SP, s);
-            // CgenSupport.emitBleq(CgenSupport.ACC, CgenSupport.T1, 1, s);
-            // CgenSupport.emitLoadBool(CgenSupport.ACC, BoolConst.falsebool, s);
-            // //CgenSupport.emitJal(0, s);
-            // CgenSupport.emitLabelDef(1, s);
-            // CgenSupport.emitLoadBool(CgenSupport.ACC, BoolConst.truebool, s);
-            // CgenSupport.emitLabelDef(0, s);
+           /* lessthanequality_test:          # ops in $t1 $t2
+                            # true in A0, false in A1
+                            # assume $t1, $t2 are not equal*/
+                //beq $t1 $zero _eq_false # $t2 can't also be void
+                CgenSupport.emitBeq(CgenSupport.T1, CgenSupport.ZERO, "_eq_false", s);
+                //beq     $t2 $zero _eq_false # $t1 can't also be void
+                CgenSupport.emitBeq(CgenSupport.T2, CgenSupport.ZERO, "_eq_false", s);                
+                //lw  $v0 0($t1)  # get tags
+                CgenSupport.emitLoad("$v0", CgenSupport.T1, 0, s);
+                //lw  $v1 0($t2)
+                CgenSupport.emitLoad("$v1", CgenSupport.T2, 0, s);
+                //bne $v1 $v0 _leq_false   # compare tags
+                CgenSupport.emitBne("$v1", "$v0", "_leq_false", s);
+                //lw  $a2 _int_tag    # load int tag <-- no offset here for some reason, so doing this instead of the below line:
+                //CgenSupport.emitLoad("$a2", "_int_tag", 0, s);
+                s.println(LW + "$a2" + " " + "(" + "_int_tag" + ")");
+                //ble $v1 $a2 _leq_int   # Integers
+                CgenSupport.emitBleq("$v1", "$a2", "_leq_int", s);
+                //_leq_int:  # handles booleans and ints
+                s.println("_leq_int" + CgenSupport.LABEL);
+                //lw  $v0,12($t1) # load values
+                CgenSupport.emitLoad("$v0", CgenSupport.T1, 3, s);
+                //lw  $v1,12($t2)
+                CgenSupport.emitLoad("$v1", CgenSupport.T2, 3, s);
+                //bgt $v1 $v0 _leq_false 
+                CgenSupport.emitBleq(String src1, String src2, int label, PrintStream s);
+
+            _leq_true:
+                jr  $ra     # return true
+            _leq_false:
+                move    $a0 $a1     # move false into accumulator
+                jr  $ra
     }
 
 
