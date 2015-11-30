@@ -752,7 +752,6 @@ class GlobalData {
     public static HashMap<String, Vector<String>> class_method_map = new HashMap<String, Vector<String>>();
     public static HashMap<String, Vector<String>> class_attr_map = new HashMap<String, Vector<String>>();
     public static HashMap<String, Vector<attr>> class_attr_init_map = new HashMap<String, Vector<attr>>();
-    public static HashMap<String, boolean> class_void_attr_map = new HashMap<String, boolean>();
     public static Vector<String> cur_method_parameters = new Vector<String>();
 }
 

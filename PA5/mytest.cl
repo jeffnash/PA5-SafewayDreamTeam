@@ -13,7 +13,7 @@ class Dog {
 	b : String <- "Bool";
   what : Offset;
   e(k : Int) : Object { {a <- 150; k <- 3;}};
-  f() : Int { {30; isvoid what; 3;} };
+  f() : Int { {30; isvoid what; 3; what <- (new Offset); 3;} };
 };
 
 class Cat inherits Dog {

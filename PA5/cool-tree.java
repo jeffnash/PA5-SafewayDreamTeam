@@ -1789,8 +1789,13 @@ class isvoid extends Expression {
         if (attrVector == null) {
             System.out.println("Something's wrong");
         }
+        int attrIndex = 0;
+        if (e1 instanceof object) {
+            attrIndex = attrVector.indexOf(((object)e1).name.getString());
+        } else {
 
-        int attrIndex = attrVector.indexOf(name.getString());
+        }
+        
 
 
         if (attrIndex == -1) {
