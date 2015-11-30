@@ -1366,6 +1366,7 @@ class lt extends Expression {
                     CgenSupport.emitReturn(s);
 
 
+
     }
 
 
@@ -1776,6 +1777,32 @@ class isvoid extends Expression {
       * @param s the output stream 
       * */
     public void code(PrintStream s) {
+        boolean isvoid = false;
+        e1.code(s);
+        int _false_labelIndex = GlobalData.getLabelIndex();
+        int _true_labelIndex = GlobalData.getLabelIndex(); 
+        CgenSupport.emitPush(CgenSupport.ACC, s);
+        CgenSupport.emitLoadBool(CgenSupport.ACC, BoolConst.truebool, s);
+        CgenSupport.emitLoadBool(CgenSupport.A1, BoolConst.falsebool, s);
+        if (e1 instanceof cond) {
+            isvoid = true;
+        } else if (e1.get_type().getString().equals("void")) {
+            isvoid = true;
+        }
+
+
+        if (isvoid) {
+            
+            s.println(_true_labelIndex + CgenSupport.LABEL);
+            //jr  $ra     # return true
+            CgenSupport.emitReturn(s);
+        } else {
+            s.println(_false_labelIndex + CgenSupport.LABEL);
+            //move    $a0 $a1     # move false into accumulator
+            CgenSupport.emitMove(CgenSupport.ACC, CgenSupport.A1, s);
+            //jr  $ra
+            CgenSupport.emitReturn(s);
+        }
     }
 
 
