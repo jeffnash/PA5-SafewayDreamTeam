@@ -3,7 +3,7 @@ class Main inherits IO {
   b : String <- "bbb";
   c : Int <- 188;
   main(): Object {
-    {1 = 2; (new Cat).d(c, 2, 3, 4, 5, 6, 7, 8, 9, 10);}
+    {1 = 2; (new Cat).d(c, 2, 3, 4, 5, 6, 7, 8, 9, 10); (new Cat).f();}
   };
 };
 
@@ -13,7 +13,7 @@ class Dog {
 	b : String <- "Bool";
   what : Offset;
   e(k : Int) : Object { {a <- 150; k <- 3;}};
-  f() : Int { {30; isvoid what; 3; what <- (new Offset); 3;} };
+  f() : Int { {30; isvoid what; 3; what <- (new Offset); isvoid what; 3;} };
 };
 
 class Cat inherits Dog {
