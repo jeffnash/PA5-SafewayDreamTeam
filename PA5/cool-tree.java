@@ -1346,9 +1346,9 @@ class lt extends Expression {
 
 
                 //lw  $v0,12($t1) # load values */
-                    CgenSupport.emitLoad("$v0", CgenSupport.T1, 3, s);
+                    CgenSupport.emitLoad("$v0", 3, CgenSupport.T1, s);
                 //lw  $v1,12($t2)
-                    CgenSupport.emitLoad("$v1", CgenSupport.T2, 3, s);
+                    CgenSupport.emitLoad("$v1", 3, CgenSupport.T2, s);
                 //bleq $v1 $v0 _leq_true
                     int _lt_false_labelIndex = GlobalData.getLabelIndex(); 
                     int _lt_true_labelIndex = GlobalData.getLabelIndex(); 
@@ -1508,9 +1508,9 @@ class leq extends Expression {
 
 
                 //lw  $v0,12($t1) # load values */
-                    CgenSupport.emitLoad("$v0", CgenSupport.T1, 3, s);
+                    CgenSupport.emitLoad("$v0",  3, CgenSupport.T1, s);
                 //lw  $v1,12($t2)
-                    CgenSupport.emitLoad("$v1", CgenSupport.T2, 3, s);
+                    CgenSupport.emitLoad("$v1", 3, CgenSupport.T2, s);
                 //bleq $v1 $v0 _leq_true
                     int _leq_false_labelIndex = GlobalData.getLabelIndex(); 
                     int _leq_true_labelIndex = GlobalData.getLabelIndex(); 
@@ -1784,13 +1784,19 @@ class isvoid extends Expression {
         CgenSupport.emitPush(CgenSupport.ACC, s);
         CgenSupport.emitLoadBool(CgenSupport.ACC, BoolConst.truebool, s);
         CgenSupport.emitLoadBool(CgenSupport.A1, BoolConst.falsebool, s);
-        if (e1 instanceof cond) {
-            isvoid = true;
-        } else if (e1.get_type().getString().equals("void")) {
-            isvoid = true;
+
+        Vector<String> attrVector = GlobalData.class_attr_map.get(GlobalData.current_class);
+        if (attrVector == null) {
+            System.out.println("Something's wrong");
         }
 
+        int attrIndex = attrVector.indexOf(name.getString());
 
+
+        if (attrIndex == -1) {
+            isvoid = true;
+        }
+        //what about infinte while loop case
         if (isvoid) {
             
             s.println(_true_labelIndex + CgenSupport.LABEL);

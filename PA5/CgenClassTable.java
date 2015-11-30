@@ -644,6 +644,7 @@ class CgenClassTable extends SymbolTable {
 		for (int j = 0; j < attrInitVector.size(); j++) {
 			attr initAttr = attrInitVector.get(j);
 			if (initAttr.init instanceof no_expr) {
+
 				continue;
 			}
 			initAttr.init.code(str);
@@ -676,9 +677,9 @@ class CgenClassTable extends SymbolTable {
 		} else if (curNDS.getName().getString().equals("Bool")) {
 			continue;
 		}
-		if (curNDS.getName().getString().equals("Cat")) {
+		/*if (curNDS.getName().getString().equals("Cat")) {
 			curNDS.dump_with_types(System.out, 0);
-		}
+		}*/
 		for (Enumeration e = curNDS.features.getElements(); e.hasMoreElements();) {
 			Feature curElement = (Feature)e.nextElement();
 			if (curElement instanceof method) {
@@ -751,6 +752,7 @@ class GlobalData {
     public static HashMap<String, Vector<String>> class_method_map = new HashMap<String, Vector<String>>();
     public static HashMap<String, Vector<String>> class_attr_map = new HashMap<String, Vector<String>>();
     public static HashMap<String, Vector<attr>> class_attr_init_map = new HashMap<String, Vector<attr>>();
+    public static HashMap<String, boolean> class_void_attr_map = new HashMap<String, boolean>();
     public static Vector<String> cur_method_parameters = new Vector<String>();
 }
 
