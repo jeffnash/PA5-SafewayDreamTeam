@@ -1343,16 +1343,16 @@ class lt extends Expression {
                 CgenSupport.emitBleq("$v1", "$a2", "_leq_int", s);
                 //_leq_int:  # handles booleans and ints
                 s.println("_leq_int" + CgenSupport.LABEL);
+                /*
 
-
-                //lw  $v0,12($t1) # load values */
+                //lw  $v0,12($t1) # load values 
                     CgenSupport.emitLoad("$v0", 3, CgenSupport.T1, s);
                 //lw  $v1,12($t2)
                     CgenSupport.emitLoad("$v1", 3, CgenSupport.T2, s);
-                //bleq $v1 $v0 _leq_true
+                //bleq $v1 $v0 _leq_true */
                     int _lt_false_labelIndex = GlobalData.getLabelIndex(); 
                     int _lt_true_labelIndex = GlobalData.getLabelIndex(); 
-                    CgenSupport.emitBlt("$v1", "$v0", _lt_true_labelIndex, s);
+                    CgenSupport.emitBlt(CgenSupport.T2, CgenSupport.T1, _lt_true_labelIndex, s);
                 //_leq_false:
                 s.println(_lt_false_labelIndex + CgenSupport.LABEL);
                     //move    $a0 $a1     # move false into accumulator
@@ -1507,25 +1507,25 @@ class leq extends Expression {
                 s.println("_leq_int" + CgenSupport.LABEL);
 
 
-                //lw  $v0,12($t1) # load values */
+                //lw  $v0,12($t1) # load values 
                     CgenSupport.emitLoad("$v0",  3, CgenSupport.T1, s);
                 //lw  $v1,12($t2)
                     CgenSupport.emitLoad("$v1", 3, CgenSupport.T2, s);
-                //bleq $v1 $v0 _leq_true
+                //bleq $v1 $v0 _leq_true*/
                     int _leq_false_labelIndex = GlobalData.getLabelIndex(); 
                     int _leq_true_labelIndex = GlobalData.getLabelIndex(); 
-                    CgenSupport.emitBleq("$v1", "$v0", _leq_true_labelIndex, s);
+                    CgenSupport.emitBleq(CgenSupport.T2, CgenSupport.T1, _lt_true_labelIndex, s);
                 //_leq_false:
                 s.println(_leq_false_labelIndex + CgenSupport.LABEL);
                     //move    $a0 $a1     # move false into accumulator
                     CgenSupport.emitMove(CgenSupport.ACC, CgenSupport.A1, s);
                     //jr  $ra*/
-                    CgenSupport.emitReturn(s);
+                    //CgenSupport.emitReturn(s);
                 
                 //_leq_true:
                 s.println(_leq_true_labelIndex + CgenSupport.LABEL);
                     //jr  $ra     # return true*/
-                    CgenSupport.emitReturn(s);
+                    //CgenSupport.emitReturn(s);
 
     }
 
