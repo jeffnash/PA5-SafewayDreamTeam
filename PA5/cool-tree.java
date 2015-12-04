@@ -636,6 +636,30 @@ class static_dispatch extends Expression {
       * @param s the output stream 
       * */
     public void code(PrintStream s) {
+        Integer indexCount = 0;
+        for (Enumeration e = actual.getElements(); e.hasMoreElements();) {
+            Expression el = (Expression)e.nextElement();
+            el.code(s);
+            CgenSupport.emitPush(CgenSupport.ACC, s);
+            indexCount += 1;
+        }
+
+        String exprclass = type_name.getString();
+
+        // for fucking null pointer exception
+        int nullity_check = GlobalData.getLabelIndex();
+        CgenSupport.emitBne(CgenSupport.ACC, CgenSupport.ZERO, nullity_check, s);
+        CgenSupport.emitLoadAddress(CgenSupport.ACC, CgenSupport.STRCONST_PREFIX + "0", s);
+        CgenSupport.emitLoadImm(CgenSupport.T1, lineNumber, s);
+        CgenSupport.emitJal("_dispatch_abort", s);
+        CgenSupport.emitLabelDef(nullity_check, s);
+
+        Vector<String> methods = GlobalData.class_method_map.get(exprclass);
+
+        int method_index = methods.indexOf(name.getString());
+        CgenSupport.emitLoad(CgenSupport.T1, 8 / 4, CgenSupport.ACC, s);
+        CgenSupport.emitLoad(CgenSupport.T1, method_index, CgenSupport.T1, s);
+        CgenSupport.emitJalr(CgenSupport.T1, s);
     }
 
 
@@ -846,6 +870,26 @@ class loop extends Expression {
       * @param s the output stream 
       * */
     public void code(PrintStream s) {
+        int start = GlobalData.getLabelIndex();
+        int end = GlobalData.getLabelIndex();
+        CgenSupport.emitLabelDef(start, s);
+        pred.code(s);
+        CgenSupport.emitLoad(CgenSupport.T1, 3, CgenSupport.ACC, s);
+        CgenSupport.emitLoadBool(CgenSupport.T2, BoolConst.truebool, s);
+        CgenSupport.emitLoad(CgenSupport.T2, 3, CgenSupport.T2, s);
+        CgenSupport.emitBne(CgenSupport.T1, CgenSupport.T2, end, s);
+        body.code(s);
+        CgenSupport.emitBranch(start, s);
+        CgenSupport.emitLabelDef(end, s);
+        CgenSupport.emitAddiu(CgenSupport.ACC, CgenSupport.ZERO, 0, s);
+        // new_label:
+        // pred.code(s);
+        // check the bool val
+            // if not true jump to new_label2 
+            // body.code(s);
+            // b new_label;
+        // new_label2:
+            // acc <- 0 (void)
     }
 
 
@@ -1263,6 +1307,11 @@ class neg extends Expression {
       * @param s the output stream 
       * */
     public void code(PrintStream s) {
+        e1.code(s);
+        CgenSupport.emitJal("Object.copy", s);
+        CgenSupport.emitLoad(CgenSupport.T1, 3, CgenSupport.ACC, s);
+        CgenSupport.emitSub(CgenSupport.T1, CgenSupport.ZERO, CgenSupport.T1, s);
+        CgenSupport.emitStore(CgenSupport.T1, 3, CgenSupport.ACC, s);
     }
 
 
@@ -1514,7 +1563,7 @@ class leq extends Expression {
                 //bleq $v1 $v0 _leq_true*/
                     int _leq_false_labelIndex = GlobalData.getLabelIndex(); 
                     int _leq_true_labelIndex = GlobalData.getLabelIndex(); 
-                    CgenSupport.emitBleq(CgenSupport.T2, CgenSupport.T1, _lt_true_labelIndex, s);
+                    CgenSupport.emitBleq(CgenSupport.T2, CgenSupport.T1, _leq_true_labelIndex, s);
                 //_leq_false:
                 s.println(_leq_false_labelIndex + CgenSupport.LABEL);
                     //move    $a0 $a1     # move false into accumulator
@@ -1568,9 +1617,13 @@ class comp extends Expression {
       * @param s the output stream 
       * */
     public void code(PrintStream s) {
+        e1.code(s);
+        CgenSupport.emitJal("Object.copy", s);
+        CgenSupport.emitLoad(CgenSupport.T1, 3, CgenSupport.ACC, s);            // t1 = 0 if false, t1 = 1 if true
+        CgenSupport.emitSub(CgenSupport.T1, CgenSupport.ZERO, CgenSupport.T1, s);  // t1 = 0 if false, t1 = -1 if true
+        CgenSupport.emitAddiu(CgenSupport.T1, CgenSupport.T1, 1, s);            // t1 = 1 if false, t1 = 0 if true
+        CgenSupport.emitStore(CgenSupport.T1, 3, CgenSupport.ACC, s);
     }
-
-
 }
 
 

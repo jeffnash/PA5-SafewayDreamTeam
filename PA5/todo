@@ -26,12 +26,12 @@ To-do list (post Thanksgiving feast):
 + leq, lt => Done?
 
 - isvoid
-- complement
-- negation
+- complement => Done but untested
+- negation => Done but untested
 - let
 - case
-- while
-- static dispatch
+- while => Done but untested
+- static dispatch => Done but untested
 - runtime error checking
 - garbage collection
 
