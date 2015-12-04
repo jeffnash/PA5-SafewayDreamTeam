@@ -684,6 +684,7 @@ class CgenClassTable extends SymbolTable {
 			Feature curElement = (Feature)e.nextElement();
 			if (curElement instanceof method) {
 				method curMeth = (method)curElement;
+				System.out.println(curMeth.name.getString() + " " + Integer.toString(LetCaseHelper.getLetCaseDepth(curMeth.expr)));
 				GlobalData.cur_method_parameters.clear();
 				for (Enumeration f = curMeth.formals.getElements(); f.hasMoreElements();) {
 					formalc formal = (formalc)f.nextElement();
@@ -755,4 +756,190 @@ class GlobalData {
     public static Vector<String> cur_method_parameters = new Vector<String>();
 }
 
-    
+class LetCaseHelper {
+	public static int cur_let_depth = 0;
+	public static HashMap<String, Vector<Integer>> id_location_map = new HashMap<String, Vector<Integer>>();
+	public static void put(String id, int location) {
+		(id_location_map.get(id)).add(0, (Integer) location);
+	}
+	public static int get(String id) {
+		Vector<Integer> vec = id_location_map.get(id);
+		if (vec == null || vec.size() == 0) {
+			return -1;
+		} 
+		return (id_location_map.get(id)).get(0);
+	}
+	public static void delete(String id) {
+		Vector<Integer> vec = id_location_map.get(id);
+		if (vec == null || vec.size() == 0) {
+			System.out.println ("weird thing happened in LetCaseHelper");
+			return;
+		}
+		vec.removeElementAt(0);
+	}
+	public static int getLetCaseDepth(Expression e) {
+		if (e instanceof assign){
+			return getLetCaseDepth(((assign)e).expr);
+		} 
+
+		else if (e instanceof static_dispatch) {
+			static_dispatch s = (static_dispatch)e;
+			int max = getLetCaseDepth(s.expr);
+			for (Enumeration n = s.actual.getElements(); n.hasMoreElements(); ) {
+				Expression x = (Expression) n.nextElement();
+				int curDepth = getLetCaseDepth(x);
+				if (max < curDepth) {
+					max = curDepth;
+				}
+			}
+			return max;
+		} 
+
+		else if (e instanceof dispatch) {
+			dispatch d = (dispatch)e;
+			int max = getLetCaseDepth(d.expr);
+			for (Enumeration n = d.actual.getElements(); n.hasMoreElements(); ) {
+				Expression x = (Expression) n.nextElement();
+				int curDepth = getLetCaseDepth(x);
+				if (max < curDepth) {
+					max = curDepth;
+				}
+			}
+			return max;
+		} 
+
+		else if (e instanceof cond) {
+			int max = getLetCaseDepth(((cond)e).pred);
+			int curDepth = getLetCaseDepth(((cond)e).then_exp);
+			if (max < curDepth) max = curDepth;
+			curDepth = getLetCaseDepth(((cond)e).else_exp);
+			if (max < curDepth) max = curDepth;
+			return max;
+		} 
+
+		else if (e instanceof loop) {
+			int max = getLetCaseDepth(((loop)e).pred);
+			int curDepth = getLetCaseDepth(((loop)e).body);
+			if (max < curDepth) max = curDepth;
+			return max;
+		} 
+
+		else if (e instanceof typcase) {
+			int max = getLetCaseDepth(((typcase)e).expr);
+			for (Enumeration n = ((typcase)e).cases.getElements(); n.hasMoreElements(); ) {
+				branch b = (branch) (n.nextElement());
+				int curDepth = getLetCaseDepth(b.expr) + 1;
+				if (max < curDepth) max = curDepth;
+			}
+			return max;
+		} 
+
+		else if (e instanceof block) {
+			block b = (block)e;
+			int max = 0;
+			for (Enumeration n = b.body.getElements(); n.hasMoreElements(); ) {
+				Expression x = (Expression) n.nextElement();
+				int curDepth = getLetCaseDepth(x);
+				if (max < curDepth) {
+					max = curDepth;
+				}
+			}
+			return max;
+		} 
+
+		else if (e instanceof let) {
+			let l = (let)e;
+			int max = getLetCaseDepth(l.init);
+			int curDepth = getLetCaseDepth(l.body) + 1;
+			if (max < curDepth) max = curDepth;
+			return max;
+		} 
+
+		else if (e instanceof plus) {
+			plus p = (plus)e;
+			int max = getLetCaseDepth(p.e1);
+			int curDepth = getLetCaseDepth(p.e2);
+			if (max < curDepth) max = curDepth;
+			return max;
+		} 
+
+		else if (e instanceof sub) {
+			sub p = (sub)e;
+			int max = getLetCaseDepth(p.e1);
+			int curDepth = getLetCaseDepth(p.e2);
+			if (max < curDepth) max = curDepth;
+			return max;
+		} 
+
+		else if (e instanceof mul) {
+			mul p = (mul)e;
+			int max = getLetCaseDepth(p.e1);
+			int curDepth = getLetCaseDepth(p.e2);
+			if (max < curDepth) max = curDepth;
+			return max;
+		} 
+
+		else if (e instanceof divide) {
+			divide p = (divide)e;
+			int max = getLetCaseDepth(p.e1);
+			int curDepth = getLetCaseDepth(p.e2);
+			if (max < curDepth) max = curDepth;
+			return max;
+		} 
+
+		else if (e instanceof neg) {
+			return getLetCaseDepth(((neg)e).e1);
+		} 
+
+		else if (e instanceof lt) {
+			lt p = (lt)e;
+			int max = getLetCaseDepth(p.e1);
+			int curDepth = getLetCaseDepth(p.e2);
+			if (max < curDepth) max = curDepth;
+			return max;
+		} 
+
+		else if (e instanceof leq) {
+			leq p = (leq)e;
+			int max = getLetCaseDepth(p.e1);
+			int curDepth = getLetCaseDepth(p.e2);
+			if (max < curDepth) max = curDepth;
+			return max;
+			
+		} 
+
+		else if (e instanceof eq) {
+			eq p = (eq)e;
+			int max = getLetCaseDepth(p.e1);
+			int curDepth = getLetCaseDepth(p.e2);
+			if (max < curDepth) max = curDepth;
+			return max;
+		} 
+
+		else if (e instanceof comp) {
+			return getLetCaseDepth(((comp)e).e1);
+		} 
+
+		else if (e instanceof isvoid) {
+			return getLetCaseDepth(((isvoid)e).e1);
+		}
+
+		else {
+			return 0;
+		}
+
+		// else if (e instanceof int_const) {
+		// 	return 0;
+		// } else if (e instanceof bool_const) {
+		// 	return 0;	
+		// } else if (e instanceof string_const) {
+		// 	return 0;
+		// } else if (e instanceof new_) {
+		// 	return 0;
+		// } else if (e instanceof no_expr) {
+		// 	return 0;
+		// } else if (e instanceof object) {
+		// 	return 0;
+		// }
+	}
+}
