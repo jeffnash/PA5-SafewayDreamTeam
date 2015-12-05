@@ -1,40 +1,9 @@
-To-do list (post Thanksgiving feast):
-- callee side things
-	Methods to edit:
-		dispatch (cool-tree) after the enumeration -- line ~704
-		will need a map for matching parameter --> actual address
-=> Done
-
-- when passing an variable into a method dispatch argument instead of an integer/string/bool etc constant, we ewill need to look up the value of that attribute. this is done in _object:
-	-also need to update attributes whose values are redifined in method (proably done in assignment code() method)
-=> Done
-
-
-======================================================================================
--I (Jaeseo) was confused about this all the time, but now it's clear:
-	cool-tree's dispatch code() is code generation for <classname>.<method>(<formals>).
-	It has nothing to do with method's body.
-	Each methods body is covered in CgenClassTable.
-
--Attribute initialization. So far, we always used default value, but that's not always the case.
- Need to modify init 
- => Done
-
-
-+ Assignment => Done
-+ Object => Done
-+ leq, lt => Done?
-
-- isvoid
-- complement => Done but untested
-- negation => Done but untested
-- let
-- case
-- while => Done but untested
-- static dispatch => Done but untested
+- update Assignment
+- case and alphas
+	= change prototype object order to depth first
+	= create maps of inheritance tree boundaries
 - runtime error checking
 - garbage collection
 
-
-You'll see the most bizarre code in the past few commits.
-Ask me when you have questions.
+- test
+- no debugging

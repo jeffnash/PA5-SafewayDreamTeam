@@ -1839,14 +1839,14 @@ class object extends Expression {
             int formalIndex = GlobalData.cur_method_parameters.indexOf(name.getString());
 
             if (formalIndex != -1) {
-                CgenSupport.emitLoad(CgenSupport.ACC, formalIndex, CgenSupport.FP, s);
+                CgenSupport.emitLoad(CgenSupport.ACC, formalIndex + GlobalData.curMethodLetDepth, CgenSupport.FP, s);
             } else if (attrIndex != -1) {
                 CgenSupport.emitLoad(CgenSupport.ACC, attrIndex + 3, CgenSupport.SELF, s);
             } else {
                 System.out.println("Something's worng");
             }
         } else {
-            CgenSupport.emitLoad(CgenSupport.ACC, LetCaseHelper.get(name.getString()), CgenSupport.FP, s) ;
+            CgenSupport.emitLoad(CgenSupport.ACC, LetCaseHelper.get(name.getString()), CgenSupport.FP, s);
         }
 
     }

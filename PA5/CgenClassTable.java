@@ -684,7 +684,8 @@ class CgenClassTable extends SymbolTable {
 			Feature curElement = (Feature)e.nextElement();
 			if (curElement instanceof method) {
 				method curMeth = (method)curElement;
-				System.out.println(curMeth.name.getString() + " " + Integer.toString(LetCaseHelper.getLetCaseDepth(curMeth.expr)));
+				int letDepth = LetCaseHelper.getLetCaseDepth(curMeth.expr);
+				GlobalData.curMethodLetDepth = letDepth;
 				GlobalData.cur_method_parameters.clear();
 				for (Enumeration f = curMeth.formals.getElements(); f.hasMoreElements();) {
 					formalc formal = (formalc)f.nextElement();
@@ -695,7 +696,7 @@ class CgenClassTable extends SymbolTable {
 				CgenSupport.emitMethodRef(curNDS.getName(), curMeth.name, str);
 				str.print(CgenSupport.LABEL);
 				int NT = paramNumbers;
-				int offset = 3 * 4;
+				int offset = (3 + letDepth) * 4;
 		        /* 12 is the amount of space we need for the temporaries in this frame = WORD_SIZE*(1 + NT), 
 		                # alternatively, this is the max NT_offset that is valid = -12
 		                # we adjust the stack pointer first by convention 
@@ -749,6 +750,7 @@ class GlobalData {
         return nextLabel++;
     }
     public static String current_class;
+    public static int curMethodLetDepth;
 
     public static HashMap<String, Vector<String>> class_method_map = new HashMap<String, Vector<String>>();
     public static HashMap<String, Vector<String>> class_attr_map = new HashMap<String, Vector<String>>();
