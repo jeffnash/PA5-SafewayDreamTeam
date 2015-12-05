@@ -1033,6 +1033,14 @@ class let extends Expression {
       * @param s the output stream 
       * */
     public void code(PrintStream s) {
+        int idStorage = LetCaseHelper.cur_let_depth;
+        LetCaseHelper.put(identifier.getString(), idStorage);
+        LetCaseHelper.cur_let_depth += 1;
+        init.code(s);
+        CgenSupport.emitStore(CgenSupport.ACC, idStorage, CgenSupport.FP, s);
+        body.code(s);
+        LetCaseHelper.upOneLevel(identifier.getString());
+        LetCaseHelper.cur_let_depth -= 1;
     }
 
 
@@ -1826,17 +1834,21 @@ class object extends Expression {
         if (attrVector == null) {
             System.out.println("Something's wrong");
         }
+        if (LetCaseHelper.get(name.getString()) == -1) {
+            int attrIndex = attrVector.indexOf(name.getString());
+            int formalIndex = GlobalData.cur_method_parameters.indexOf(name.getString());
 
-        int attrIndex = attrVector.indexOf(name.getString());
-        int formalIndex = GlobalData.cur_method_parameters.indexOf(name.getString());
-
-        if (formalIndex != -1) {
-            CgenSupport.emitLoad(CgenSupport.ACC, formalIndex, CgenSupport.FP, s);
-        } else if (attrIndex != -1) {
-            CgenSupport.emitLoad(CgenSupport.ACC, attrIndex + 3, CgenSupport.SELF, s);
+            if (formalIndex != -1) {
+                CgenSupport.emitLoad(CgenSupport.ACC, formalIndex, CgenSupport.FP, s);
+            } else if (attrIndex != -1) {
+                CgenSupport.emitLoad(CgenSupport.ACC, attrIndex + 3, CgenSupport.SELF, s);
+            } else {
+                System.out.println("Something's worng");
+            }
         } else {
-            System.out.println("Something's worng");
+            CgenSupport.emitLoad(CgenSupport.ACC, LetCaseHelper.get(name.getString()), CgenSupport.FP, s) 
         }
+
     }
 }
 

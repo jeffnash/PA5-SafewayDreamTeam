@@ -760,6 +760,9 @@ class LetCaseHelper {
 	public static int cur_let_depth = 0;
 	public static HashMap<String, Vector<Integer>> id_location_map = new HashMap<String, Vector<Integer>>();
 	public static void put(String id, int location) {
+		if (!id_location_map.containsKey(id)) {
+			id_location_map.put(id, new Vector<Integer>());
+		}
 		(id_location_map.get(id)).add(0, (Integer) location);
 	}
 	public static int get(String id) {
@@ -769,13 +772,19 @@ class LetCaseHelper {
 		} 
 		return (id_location_map.get(id)).get(0);
 	}
-	public static void delete(String id) {
+	public static void upOneLevel(String id) {
 		Vector<Integer> vec = id_location_map.get(id);
 		if (vec == null || vec.size() == 0) {
 			System.out.println ("weird thing happened in LetCaseHelper");
 			return;
 		}
 		vec.removeElementAt(0);
+		if (vec.size() == 0) {
+			id_location_map.deleteIDEntry(id);
+		}
+	}
+	public static void deleteIDEntry(String id) {
+		id_location_map.remove(id);
 	}
 	public static int getLetCaseDepth(Expression e) {
 		if (e instanceof assign){
