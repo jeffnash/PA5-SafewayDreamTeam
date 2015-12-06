@@ -377,22 +377,20 @@ class CgenClassTable extends SymbolTable {
         }
 
         for (int i = 0; i < daddyClasses.size(); i += 1) {
-        	
         	organizedClassList.add(daddyClasses.get(i));
-        	recursiveDepthFirst(daddyClasses.get(i), allClasses, organizedClassList);
-        	
+        	recursiveDepthFirst(daddyClasses.get(i), allClasses, organizedClassList);	
         }
 
         for (int i = 0; i < organizedClassList.size(); i += 1) {
         	installClass(new CgenNode(organizedClassList.get(i), 
 				       CgenNode.NotBasic, this));
         }   
-
+		/* vvvvvvv *Print statement for Jaeseo to verify* vvvvvvvvvvvvvvv */
         Object[] keys = GlobalData.inheritanceBoundaryMap.keySet().toArray();
         for (int i = 0; i < keys.length; i += 1) {
         	System.out.println(keys[i] + " maps to " + GlobalData.inheritanceBoundaryMap.get((Integer)keys[i]));
-
         }
+        /*^^^^^^^ *Take this (and the import of java.util.Set) out when you're done!* ^^^^^^ */
     }
 
     private void recursiveDepthFirst(Class_ parentClass, Vector<Class_> allClasses, Vector<Class_> organizedClassList) {
