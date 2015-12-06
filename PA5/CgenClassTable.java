@@ -360,10 +360,46 @@ class CgenClassTable extends SymbolTable {
     }
 
     private void installClasses(Classes cs) {
-        for (Enumeration e = cs.getElements(); e.hasMoreElements(); ) {
-	    installClass(new CgenNode((Class_)e.nextElement(), 
+    	Vector<Class_> allClasses = new Vector<Class_>();
+    	Vector<Class_> organizedClassList = new Vector<Class_>();
+    	/* First pass, we simply see which classes inherit from Object. */
+
+    	Vector<Class_> daddyClasses = new Vector<Class_>();
+    	for (Enumeration e = cs.getElements(); e.hasMoreElements(); ) {
+        	allClasses.add((Class_)e.nextElement());
+        }
+
+        for (int i = 0; i < allClasses.size(); i += 1) {
+        	if (allClasses.get(i).getParent().getString().equals("Object") || allClasses.get(i).getParent().getString().equals("IO")) {
+        		daddyClasses.add(allClasses.get(i));
+        	}
+        }
+
+        for (int i = 0; i < daddyClasses.size(); i += 1) {
+        	organizedClassList.add(daddyClasses.get(i));
+        	recursiveDepthFirst(daddyClasses.get(i), allClasses, organizedClassList);
+        }
+
+        for (int i = 0; i < organizedClassList.size(); i += 1) {
+        	installClass(new CgenNode(organizedClassList.get(i), 
 				       CgenNode.NotBasic, this));
         }
+
+
+       
+    }
+
+    private void recursiveDepthFirst(Class_ parentClass, Vector<Class_> allClasses, Vector<Class_> organizedClassList) {
+    	if (allClasses.size() == organizedClassList.size()) {
+    		return;
+    	} 
+    	String parentClassString = parentClass.getName().getString();
+    	for (int i = 0; i < allClasses.size(); i += 1) {
+    		if (allClasses.get(i).getParent().getString().equals(parentClassString)) {
+    			organizedClassList.add(allClasses.get(i));
+    			recursiveDepthFirst(allClasses.get(i), allClasses, organizedClassList);
+    		}
+    	}
     }
 
     public static int getMax(ArrayList<Integer> findMax) {

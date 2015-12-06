@@ -8,6 +8,18 @@ class Main inherits IO {
 };
 
 
+class Dat inherits Cat {
+  f : Bool <- true;
+};
+
+class FutureHendrix inherits Dog {
+  p : Int;
+};
+
+class CashOut inherits FutureHendrix {
+  katyPerry: Bool;
+};
+
 class Dog {
 	a : Int <- 100;
 	b : String <- "Bool";
@@ -28,3 +40,8 @@ class Offset {
   whileloop() : Object { while false loop false pool };
   casestatement() : Object { case 3 of a : Int => a + 3; b : Bool => not b; esac };
 };
+
+class YoungThug inherits FutureHendrix {
+  djEsco: Bool;
+};
+
