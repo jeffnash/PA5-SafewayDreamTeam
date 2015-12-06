@@ -1,6 +1,6 @@
 - update Assignment
 - case and alphas
-	= change prototype object order to depth first
+	--> change prototype object order to depth first DONE
 	= create maps of inheritance tree boundaries
 - runtime error checking
 - garbage collection

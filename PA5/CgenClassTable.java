@@ -27,6 +27,7 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Set;
 /** This class is used for representing the inheritance tree during code
     generation. You will need to fill in some of its methods and
     potentially extend it in other useful ways. */
@@ -376,17 +377,22 @@ class CgenClassTable extends SymbolTable {
         }
 
         for (int i = 0; i < daddyClasses.size(); i += 1) {
+        	
         	organizedClassList.add(daddyClasses.get(i));
         	recursiveDepthFirst(daddyClasses.get(i), allClasses, organizedClassList);
+        	
         }
 
         for (int i = 0; i < organizedClassList.size(); i += 1) {
         	installClass(new CgenNode(organizedClassList.get(i), 
 				       CgenNode.NotBasic, this));
+        }   
+
+        Object[] keys = GlobalData.inheritanceBoundaryMap.keySet().toArray();
+        for (int i = 0; i < keys.length; i += 1) {
+        	System.out.println(keys[i] + " maps to " + GlobalData.inheritanceBoundaryMap.get((Integer)keys[i]));
+
         }
-
-
-       
     }
 
     private void recursiveDepthFirst(Class_ parentClass, Vector<Class_> allClasses, Vector<Class_> organizedClassList) {
@@ -394,12 +400,15 @@ class CgenClassTable extends SymbolTable {
     		return;
     	} 
     	String parentClassString = parentClass.getName().getString();
+    	int curBoundary = organizedClassList.size(); 
     	for (int i = 0; i < allClasses.size(); i += 1) {
     		if (allClasses.get(i).getParent().getString().equals(parentClassString)) {
     			organizedClassList.add(allClasses.get(i));
     			recursiveDepthFirst(allClasses.get(i), allClasses, organizedClassList);
     		}
     	}
+    	Integer delta = organizedClassList.size() - curBoundary;
+       	GlobalData.inheritanceBoundaryMap.put(curBoundary + 4, curBoundary + delta + 4); //offset by 5 because of Object, String, Bool, Int, IO
     }
 
     public static int getMax(ArrayList<Integer> findMax) {
@@ -792,6 +801,7 @@ class GlobalData {
     public static HashMap<String, Vector<String>> class_attr_map = new HashMap<String, Vector<String>>();
     public static HashMap<String, Vector<attr>> class_attr_init_map = new HashMap<String, Vector<attr>>();
     public static Vector<String> cur_method_parameters = new Vector<String>();
+    public static HashMap<Integer, Integer> inheritanceBoundaryMap = new HashMap<Integer, Integer>();
 }
 
 class LetCaseHelper {
