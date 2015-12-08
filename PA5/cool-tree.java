@@ -12,6 +12,8 @@ import java.util.Enumeration;
 import java.io.PrintStream;
 import java.util.Vector;
 import java.util.HashMap;
+import java.util.TreeSet;
+import java.util.Comparator;
 
 
 /** Defines simple phylum Program */
@@ -559,25 +561,49 @@ class assign extends Expression {
       * @param s the output stream 
       * */
     public void code(PrintStream s) {
-        Vector<String> attrVector = GlobalData.class_attr_map.get(GlobalData.current_class);
-        if (attrVector == null) {
-            System.out.println("Something's wrong");
-        }
+        // Vector<String> attrVector = GlobalData.class_attr_map.get(GlobalData.current_class);
+        // if (attrVector == null) {
+        //     System.out.println("Something's wrong");
+        // }
 
-        int attrIndex = attrVector.indexOf(name.getString());
-        int formalIndex = GlobalData.cur_method_parameters.indexOf(name.getString());
+        // int attrIndex = attrVector.indexOf(name.getString());
+        // int formalIndex = GlobalData.cur_method_parameters.indexOf(name.getString());
 
-        expr.code(s);
+        // expr.code(s);
 
-        if (formalIndex != -1) {
-            CgenSupport.emitStore(CgenSupport.ACC, formalIndex, CgenSupport.FP, s);
-        } else if (attrIndex != -1) {
-            CgenSupport.emitStore(CgenSupport.ACC, attrIndex + 3, CgenSupport.SELF, s);
+        // if (formalIndex != -1) {
+        //     CgenSupport.emitStore(CgenSupport.ACC, formalIndex, CgenSupport.FP, s);
+        // } else if (attrIndex != -1) {
+        //     CgenSupport.emitStore(CgenSupport.ACC, attrIndex + 3, CgenSupport.SELF, s);
+        // } else {
+        //     System.out.println("Something's worng");
+        // }
+
+        if (LetCaseHelper.get(name.getString()) == -1) {
+            Vector<String> attrVector = GlobalData.class_attr_map.get(GlobalData.current_class);
+            if (attrVector == null) {
+                System.out.println("attr vector null");
+            }
+            int attrIndex = attrVector.indexOf(name.getString());
+            int formalIndex = GlobalData.cur_method_parameters.indexOf(name.getString());
+
+            expr.code(s);
+
+            if (formalIndex != -1) {
+                CgenSupport.emitStore(CgenSupport.ACC, formalIndex + GlobalData.curMethodLetDepth, CgenSupport.FP, s);
+            } else if (attrIndex != -1) {
+                CgenSupport.emitStore(CgenSupport.ACC, attrIndex + 3, CgenSupport.SELF, s);
+            } else if (name.getString().equals("self")){
+                CgenSupport.emitMove(CgenSupport.ACC, CgenSupport.SELF, s);
+            } else {
+                System.out.println("Something's wrong");
+            }
+
+
         } else {
-            System.out.println("Something's worng");
+            CgenSupport.emitStore(CgenSupport.ACC, LetCaseHelper.get(name.getString()), CgenSupport.FP, s);
         }
     }
-
 
 }
 
@@ -877,7 +903,7 @@ class loop extends Expression {
         CgenSupport.emitLoad(CgenSupport.ACC, 3, CgenSupport.ACC, s);            // get "real" boolean value
         CgenSupport.emitLoadBool(CgenSupport.T1, BoolConst.truebool, s);        // getting true
         CgenSupport.emitLoad(CgenSupport.T1, 3, CgenSupport.T1, s);             // get 1 to t1
-        CgenSupport.emitBne(CgenSupport.ACC, CgenSupport.T2, end, s);
+        CgenSupport.emitBne(CgenSupport.ACC, CgenSupport.T1, end, s);
         body.code(s);
         CgenSupport.emitBranch(start, s);
         CgenSupport.emitLabelDef(end, s);
@@ -930,6 +956,42 @@ class typcase extends Expression {
       * @param s the output stream 
       * */
     public void code(PrintStream s) {
+
+        TreeSet<branch> orderedBranches = new TreeSet<branch>(new branch_comp());
+        for (Enumeration e = cases.getElements(); e.hasMoreElements(); ) {
+            branch c = (branch) (e.nextElement());
+            orderedBranches.add(c);
+        }
+
+        int start = GlobalData.getLabelIndex();
+        int case_end = GlobalData.getLabelIndex();
+        int idStorage = LetCaseHelper.cur_let_depth;
+        LetCaseHelper.cur_let_depth += 1;
+
+        expr.code(s);
+
+        CgenSupport.emitBne(CgenSupport.ACC, CgenSupport.ZERO, start, s);
+        CgenSupport.emitLoadAddress(CgenSupport.ACC, CgenSupport.STRCONST_PREFIX + "0", s);
+        CgenSupport.emitLoadImm(CgenSupport.T1, lineNumber, s);
+        CgenSupport.emitJal("_case_abort2", s);
+        CgenSupport.emitLabelDef(start, s);
+        CgenSupport.emitStore(CgenSupport.ACC, idStorage, CgenSupport.FP, s);
+
+        CgenSupport.emitLoad(CgenSupport.T1, 0, CgenSupport.ACC, s);    // getting type index in T1
+        for (branch bit : orderedBranches) {
+            int next_case = GlobalData.getLabelIndex();
+            int classIndex = GlobalData.class_names.indexOf(bit.type_decl.getString());
+            CgenSupport.emitBlti(CgenSupport.T1, classIndex, next_case, s);
+            CgenSupport.emitBgti(CgenSupport.T1, GlobalData.inheritanceBoundaryMap.get(classIndex), next_case, s);
+            LetCaseHelper.put(bit.name.getString(), idStorage);
+            bit.expr.code(s);
+            CgenSupport.emitBranch(case_end, s);
+            LetCaseHelper.upOneLevel(bit.name.getString());
+            CgenSupport.emitLabelDef(next_case, s);
+        }
+        CgenSupport.emitJal("_case_abort", s);
+        LetCaseHelper.cur_let_depth -= 1;
+        CgenSupport.emitLabelDef(case_end, s);
     }
 
 
@@ -1532,11 +1594,12 @@ class comp extends Expression {
       * */
     public void code(PrintStream s) {
         e1.code(s);
-        CgenSupport.emitJal("Object.copy", s);
-        CgenSupport.emitLoad(CgenSupport.T1, 3, CgenSupport.ACC, s);            // t1 = 0 if false, t1 = 1 if true
-        CgenSupport.emitSub(CgenSupport.T1, CgenSupport.ZERO, CgenSupport.T1, s);  // t1 = 0 if false, t1 = -1 if true
-        CgenSupport.emitAddiu(CgenSupport.T1, CgenSupport.T1, 1, s);            // t1 = 1 if false, t1 = 0 if true
-        CgenSupport.emitStore(CgenSupport.T1, 3, CgenSupport.ACC, s);
+        int false_label = GlobalData.getLabelIndex();
+        CgenSupport.emitLoad(CgenSupport.T1, 3, CgenSupport.ACC, s);
+        CgenSupport.emitLoadBool(CgenSupport.ACC, BoolConst.truebool, s);
+        CgenSupport.emitBeqz(CgenSupport.T1, false_label, s);
+        CgenSupport.emitLoadBool(CgenSupport.ACC, BoolConst.falsebool, s);
+        CgenSupport.emitLabelDef(false_label, s);
     }
 }
 
@@ -1830,11 +1893,11 @@ class object extends Expression {
       * @param s the output stream 
       * */
     public void code(PrintStream s) {
-        Vector<String> attrVector = GlobalData.class_attr_map.get(GlobalData.current_class);
-        if (attrVector == null) {
-            System.out.println("Something's wrong");
-        }
         if (LetCaseHelper.get(name.getString()) == -1) {
+            Vector<String> attrVector = GlobalData.class_attr_map.get(GlobalData.current_class);
+            if (attrVector == null) {
+                System.out.println("attr vector null");
+            }
             int attrIndex = attrVector.indexOf(name.getString());
             int formalIndex = GlobalData.cur_method_parameters.indexOf(name.getString());
 
@@ -1842,13 +1905,24 @@ class object extends Expression {
                 CgenSupport.emitLoad(CgenSupport.ACC, formalIndex + GlobalData.curMethodLetDepth, CgenSupport.FP, s);
             } else if (attrIndex != -1) {
                 CgenSupport.emitLoad(CgenSupport.ACC, attrIndex + 3, CgenSupport.SELF, s);
+            } else if (name.getString().equals("self")){
+                CgenSupport.emitMove(CgenSupport.ACC, CgenSupport.SELF, s);
             } else {
-                System.out.println("Something's worng");
+                System.out.println("Something's wrong");
             }
+
+
         } else {
             CgenSupport.emitLoad(CgenSupport.ACC, LetCaseHelper.get(name.getString()), CgenSupport.FP, s);
         }
 
+    }
+}
+
+class branch_comp implements Comparator<branch> {
+    public int compare(branch o1, branch o2) {
+        return GlobalData.class_names.indexOf(o2.type_decl.getString())
+             - GlobalData.class_names.indexOf(o1.type_decl.getString());
     }
 }
 

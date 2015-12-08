@@ -227,48 +227,6 @@ class CgenClassTable extends SymbolTable {
 
 	installClass(new CgenNode(Object_class, CgenNode.Basic, this));
 	
-	// The IO class inherits from Object. Its methods are
-	//        out_string(Str) : SELF_TYPE  writes a string to the output
-	//        out_int(Int) : SELF_TYPE      "    an int    "  "     "
-	//        in_string() : Str            reads a string from the input
-	//        in_int() : Int                "   an int     "  "     "
-
-	class_c IO_class = 
-	    new class_c(0,
-		       TreeConstants.IO,
-		       TreeConstants.Object_,
-		       new Features(0)
-			   .appendElement(new method(0,
-					      TreeConstants.out_string,
-					      new Formals(0)
-						  .appendElement(new formalc(0,
-								     TreeConstants.arg,
-								     TreeConstants.Str)),
-					      TreeConstants.SELF_TYPE,
-					      new no_expr(0)))
-			   .appendElement(new method(0,
-					      TreeConstants.out_int,
-					      new Formals(0)
-						  .appendElement(new formalc(0,
-								     TreeConstants.arg,
-								     TreeConstants.Int)),
-					      TreeConstants.SELF_TYPE,
-					      new no_expr(0)))
-			   .appendElement(new method(0,
-					      TreeConstants.in_string,
-					      new Formals(0),
-					      TreeConstants.Str,
-					      new no_expr(0)))
-			   .appendElement(new method(0,
-					      TreeConstants.in_int,
-					      new Formals(0),
-					      TreeConstants.Int,
-					      new no_expr(0))),
-		       filename);
-
-	CgenNode IO_node = new CgenNode(IO_class, CgenNode.Basic, this);
-	installClass(IO_node);
-
 	// The Int class has no methods and only a single attribute, the
 	// "val" for the integer.
 
@@ -346,6 +304,48 @@ class CgenClassTable extends SymbolTable {
 		       filename);
 
 	installClass(new CgenNode(Str_class, CgenNode.Basic, this));
+
+		// The IO class inherits from Object. Its methods are
+	//        out_string(Str) : SELF_TYPE  writes a string to the output
+	//        out_int(Int) : SELF_TYPE      "    an int    "  "     "
+	//        in_string() : Str            reads a string from the input
+	//        in_int() : Int                "   an int     "  "     "
+
+	class_c IO_class = 
+	    new class_c(0,
+		       TreeConstants.IO,
+		       TreeConstants.Object_,
+		       new Features(0)
+			   .appendElement(new method(0,
+					      TreeConstants.out_string,
+					      new Formals(0)
+						  .appendElement(new formalc(0,
+								     TreeConstants.arg,
+								     TreeConstants.Str)),
+					      TreeConstants.SELF_TYPE,
+					      new no_expr(0)))
+			   .appendElement(new method(0,
+					      TreeConstants.out_int,
+					      new Formals(0)
+						  .appendElement(new formalc(0,
+								     TreeConstants.arg,
+								     TreeConstants.Int)),
+					      TreeConstants.SELF_TYPE,
+					      new no_expr(0)))
+			   .appendElement(new method(0,
+					      TreeConstants.in_string,
+					      new Formals(0),
+					      TreeConstants.Str,
+					      new no_expr(0)))
+			   .appendElement(new method(0,
+					      TreeConstants.in_int,
+					      new Formals(0),
+					      TreeConstants.Int,
+					      new no_expr(0))),
+		       filename);
+
+	CgenNode IO_node = new CgenNode(IO_class, CgenNode.Basic, this);
+	installClass(IO_node);
     }
 	
     // The following creates an inheritance graph from
@@ -371,32 +371,54 @@ class CgenClassTable extends SymbolTable {
         }
 
         for (int i = 0; i < allClasses.size(); i += 1) {
-        	if (allClasses.get(i).getParent().getString().equals("Object") || allClasses.get(i).getParent().getString().equals("IO")) {
+        	if (allClasses.get(i).getParent().getString().equals("Object")) {
         		daddyClasses.add(allClasses.get(i));
         	}
         }
+
+        daddyClasses.add(0, (Class_) (nds.get(4)));
+
 
         for (int i = 0; i < daddyClasses.size(); i += 1) {
         	organizedClassList.add(daddyClasses.get(i));
         	recursiveDepthFirst(daddyClasses.get(i), allClasses, organizedClassList);	
         }
 
+        GlobalData.class_names.add("Object");
+        GlobalData.class_names.add("Int");
+        GlobalData.class_names.add("Bool");
+        GlobalData.class_names.add("String");
+
         for (int i = 0; i < organizedClassList.size(); i += 1) {
         	installClass(new CgenNode(organizedClassList.get(i), 
 				       CgenNode.NotBasic, this));
-        }   
+        	GlobalData.class_names.add(organizedClassList.get(i).getName().getString());
+        }
+
+        GlobalData.inheritanceBoundaryMap.put(0, nds.size() - 1);	//object
+        GlobalData.inheritanceBoundaryMap.put(1, 1);				//int
+        GlobalData.inheritanceBoundaryMap.put(2, 2);				//bool
+        GlobalData.inheritanceBoundaryMap.put(3, 3);				//string
+
 		/* vvvvvvv *Print statement for Jaeseo to verify* vvvvvvvvvvvvvvv */
         Object[] keys = GlobalData.inheritanceBoundaryMap.keySet().toArray();
         for (int i = 0; i < keys.length; i += 1) {
         	System.out.println(keys[i] + " maps to " + GlobalData.inheritanceBoundaryMap.get((Integer)keys[i]));
         }
+        Vector<String> names = GlobalData.class_names;
+        for (int i = 0; i < names.size(); i += 1) {
+        	System.out.println(names.get(i) + " as " + Integer.toString(i));
+        }
         /*^^^^^^^ *Take this (and the import of java.util.Set) out when you're done!* ^^^^^^ */
     }
 
     private void recursiveDepthFirst(Class_ parentClass, Vector<Class_> allClasses, Vector<Class_> organizedClassList) {
+
+    	/* Jaeseo: what's the need for this?? This three lines cause an off-by-one error.
     	if (allClasses.size() == organizedClassList.size()) {
     		return;
     	} 
+    	*/
     	String parentClassString = parentClass.getName().getString();
     	int curBoundary = organizedClassList.size(); 
     	for (int i = 0; i < allClasses.size(); i += 1) {
@@ -406,65 +428,9 @@ class CgenClassTable extends SymbolTable {
     		}
     	}
     	Integer delta = organizedClassList.size() - curBoundary;
-       	GlobalData.inheritanceBoundaryMap.put(curBoundary + 4, curBoundary + delta + 4); //offset by 5 because of Object, String, Bool, Int, IO
+       	GlobalData.inheritanceBoundaryMap.put(curBoundary + 3, curBoundary + delta + 3); //offset by 5 because of Object, String, Bool, Int, IO
     }
 
-    public static int getMax(ArrayList<Integer> findMax) {
-    	return Collections.max(findMax);
-    }
-
-    public static int numTempCounterFunctionEntry(Expression expr) {
-    	ArrayList<Integer> findMax = new ArrayList<Integer>();
-
-    	findMax.clear();
-    	numTempCounter(expr, findMax);
-    	return getMax(findMax);
-    }
-
-    public static int numTempCounter(Expression expr, ArrayList<Integer> findMax) {
-    	
-    	//need to add case for id to return 0
-    	if (expr instanceof int_const || expr instanceof bool_const) {
-    		return 0;
-    	} else if (expr instanceof eq) {
-	    	findMax.add(numTempCounter(((eq)expr).e1, findMax));
-	    	findMax.add(numTempCounter(((eq)expr).e2, findMax) + 1);
-	    	System.out.println("eq" + getMax(findMax));
-    	} else if (expr instanceof leq) {
-	    	findMax.add(numTempCounter(((leq)expr).e1, findMax));
-	    	findMax.add(numTempCounter(((leq)expr).e2, findMax) + 1);
-	    	System.out.println("leq" + getMax(findMax));
-
-    	} else if (expr instanceof plus) {
-	    	findMax.add(numTempCounter(((plus)expr).e1, findMax));
-	    	findMax.add(numTempCounter(((plus)expr).e2, findMax) + 1);
-	    		    		    	System.out.println("plus_" + getMax(findMax));
-
-    	} else if (expr instanceof sub) {
-	    	findMax.add(numTempCounter(((sub)expr).e1, findMax));
-	    	findMax.add(numTempCounter(((sub)expr).e2, findMax) + 1);
-	    		    		    	System.out.println("plus_" + getMax(findMax));
-
-    	} else if (expr instanceof mul) {
-	    	findMax.add(numTempCounter(((mul)expr).e1, findMax));
-	    	findMax.add(numTempCounter(((mul)expr).e2, findMax) + 1);
-	    		    		    	System.out.println("plus_" + getMax(findMax));
-
-    	} else if (expr instanceof divide) {
-	    	findMax.add(numTempCounter(((divide)expr).e1, findMax));
-	    	findMax.add(numTempCounter(((divide)expr).e2, findMax) + 1);
-	    		    		    	System.out.println("plus_" + getMax(findMax));
-
-    	}else if (expr instanceof cond) {
-    		cond cond = (cond) expr;
-    		findMax.add(numTempCounter(cond.pred, findMax));
-    		findMax.add(numTempCounter(cond.then_exp, findMax));
-    		findMax.add(numTempCounter(cond.else_exp, findMax));
-    			    		    	System.out.println("plus_" + getMax(findMax));
-
-    	}
-    	return 0;
-    }
 
     private void buildInheritanceTree() {
 	for (Enumeration e = nds.elements(); e.hasMoreElements(); ) {
@@ -485,7 +451,7 @@ class CgenClassTable extends SymbolTable {
 
 	this.str = str;
 
-	stringclasstag = 0 /* Change to your String class tag here */;
+	stringclasstag = 3 /* Change to your String class tag here */;
 	intclasstag =    1 /* Change to your Int class tag here */;
 	boolclasstag =   2 /* Change to your Bool class tag here */;
 
@@ -800,6 +766,7 @@ class GlobalData {
     public static HashMap<String, Vector<attr>> class_attr_init_map = new HashMap<String, Vector<attr>>();
     public static Vector<String> cur_method_parameters = new Vector<String>();
     public static HashMap<Integer, Integer> inheritanceBoundaryMap = new HashMap<Integer, Integer>();
+    public static Vector<String> class_names = new Vector<String>();
 }
 
 class LetCaseHelper {
@@ -983,18 +950,5 @@ class LetCaseHelper {
 			return 0;
 		}
 
-		// else if (e instanceof int_const) {
-		// 	return 0;
-		// } else if (e instanceof bool_const) {
-		// 	return 0;	
-		// } else if (e instanceof string_const) {
-		// 	return 0;
-		// } else if (e instanceof new_) {
-		// 	return 0;
-		// } else if (e instanceof no_expr) {
-		// 	return 0;
-		// } else if (e instanceof object) {
-		// 	return 0;
-		// }
 	}
 }
