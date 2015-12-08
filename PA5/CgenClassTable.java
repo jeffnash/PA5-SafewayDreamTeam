@@ -509,42 +509,85 @@ class CgenClassTable extends SymbolTable {
 	}
 
 
+	// for (int i = 0; i < nds.size(); i += 1) {
+	// 	CgenNode curNDS = (CgenNode)nds.get(i);
+	// 	//save the original class's name
+	// 	String dispatchedClassName = curNDS.getName().getString();
+	// 	Vector<String> concatenatedClassMethodStrings = new Vector<String>();
+	// 	Vector<String> classMethodStrings = new Vector<String>();
+	// 	while (curNDS.getParentNd() != null) {
+	// 		AbstractSymbol className = curNDS.getName();
+	// 		for (Enumeration e = curNDS.features.getElements(); e.hasMoreElements();) {
+	// 			Feature curElement = (Feature)e.nextElement();
+	// 			if (curElement instanceof method) {
+	// 				method curMethod = (method)curElement;
+	// 				boolean alreadyThere = classMethodStrings.indexOf(curMethod.name.getString()) != -1;
+	// 				if (!alreadyThere) {
+	// 					concatenatedClassMethodStrings.add(className.getString() + CgenSupport.METHOD_SEP + curMethod.name.getString());
+	// 					classMethodStrings.add(curMethod.name.getString());
+	// 				}
+	// 			} 
+	// 		}
+	// 		curNDS = curNDS.getParentNd();
+	// 	}
+
+	// 	Collections.reverse(concatenatedClassMethodStrings);								//SWAG
+	// 	Collections.reverse(classMethodStrings);
+	// 	GlobalData.class_method_map.put(dispatchedClassName, classMethodStrings);
+
+	// 	str.print(dispatchedClassName + CgenSupport.DISPTAB_SUFFIX + CgenSupport.LABEL);
+	// 	for (int j = 0; j < concatenatedClassMethodStrings.size(); j += 1) {
+
+	// 		String concatenatedClassMethodString = concatenatedClassMethodStrings.get(j);
+	// 		str.println(CgenSupport.WORD + concatenatedClassMethodString);
+	// 	}
+				
+
+	// }
+//////
 	for (int i = 0; i < nds.size(); i += 1) {
 		CgenNode curNDS = (CgenNode)nds.get(i);
 		//save the original class's name
 		String dispatchedClassName = curNDS.getName().getString();
+		Vector<CgenNode> anscesters = new Vector<CgenNode>();
+		CgenNode ptr = curNDS;
+		while (ptr.getParentNd() != null) {
+			anscesters.add(0, ptr);
+			ptr = ptr.getParentNd();
+		}
+
 		Vector<String> concatenatedClassMethodStrings = new Vector<String>();
 		Vector<String> classMethodStrings = new Vector<String>();
-		while (curNDS.getParentNd() != null) {
-			AbstractSymbol className = curNDS.getName();
-			for (Enumeration e = curNDS.features.getElements(); e.hasMoreElements();) {
+		for (int j = 0; j < anscesters.size(); j++) {
+			ptr = anscesters.get(j);
+			for (Enumeration e = ptr.features.getElements(); e.hasMoreElements(); ) {
 				Feature curElement = (Feature)e.nextElement();
 				if (curElement instanceof method) {
 					method curMethod = (method)curElement;
-					boolean alreadyThere = classMethodStrings.indexOf(curMethod.name.getString()) != -1;
-					if (!alreadyThere) {
-						concatenatedClassMethodStrings.add(className.getString() + CgenSupport.METHOD_SEP + curMethod.name.getString());
+					int location = classMethodStrings.indexOf(curMethod.name.getString());
+					if (location == -1) {
+						concatenatedClassMethodStrings.add(ptr.getName().getString() + CgenSupport.METHOD_SEP
+														 + curMethod.name.getString());
 						classMethodStrings.add(curMethod.name.getString());
+					} else {
+						concatenatedClassMethodStrings.set(location, ptr.getName().getString() + CgenSupport.METHOD_SEP
+														 + curMethod.name.getString());
 					}
-				} 
+				}
+
 			}
-			curNDS = curNDS.getParentNd();
 		}
 
-		Collections.reverse(concatenatedClassMethodStrings);								//SWAG
-		Collections.reverse(classMethodStrings);
 		GlobalData.class_method_map.put(dispatchedClassName, classMethodStrings);
 
 		str.print(dispatchedClassName + CgenSupport.DISPTAB_SUFFIX + CgenSupport.LABEL);
 		for (int j = 0; j < concatenatedClassMethodStrings.size(); j += 1) {
-
 			String concatenatedClassMethodString = concatenatedClassMethodStrings.get(j);
 			str.println(CgenSupport.WORD + concatenatedClassMethodString);
 		}
 				
 
 	}
-
 
 
 	for (int i = 0; i < nds.size(); i += 1) {
@@ -629,47 +672,7 @@ class CgenClassTable extends SymbolTable {
 	if (Flags.cgen_debug) System.out.println("coding global text");
 	codeGlobalText();
 
-	//                 Add your code to emit
-	//                   - object initializer
-	for (int i = 0; i < nds.size(); i += 1) {
-		//we will have to add attributes here later
-		CgenNode curNDS = (CgenNode)nds.get(i);
-		CgenSupport.emitInitRef(curNDS.getName(), str);
-		str.print(CgenSupport.LABEL);
-
-		CgenSupport.emitAddiu(CgenSupport.SP, CgenSupport.SP, -12, str);
-		CgenSupport.emitStore(CgenSupport.FP, 12/4, CgenSupport.SP, str);
-		CgenSupport.emitStore(CgenSupport.SELF, 8/4, CgenSupport.SP, str);
-		CgenSupport.emitStore(CgenSupport.RA, 4/4, CgenSupport.SP, str);
-		CgenSupport.emitAddiu(CgenSupport.FP, CgenSupport.SP, 16, str);
-		CgenSupport.emitMove(CgenSupport.SELF, CgenSupport.ACC, str);
-		//Object_init skips this line
-		if (!curNDS.getName().getString().equals(TreeConstants.Object_.getString())) {
-			CgenSupport.emitJal(curNDS.getParentNd().getName().getString() + CgenSupport.CLASSINIT_SUFFIX, str);
-		}
-
-		Vector<attr> attrInitVector = GlobalData.class_attr_init_map.get(curNDS.name.getString());
-		Vector<String> attrVector = GlobalData.class_attr_map.get(curNDS.name.getString());
-		for (int j = 0; j < attrInitVector.size(); j++) {
-			attr initAttr = attrInitVector.get(j);
-			if (initAttr.init instanceof no_expr) {
-
-				continue;
-			}
-			initAttr.init.code(str);
-			int realIndex = attrVector.indexOf(initAttr.name.getString());
-			CgenSupport.emitStore(CgenSupport.ACC, realIndex + 3, CgenSupport.SELF, str);
-		}
-
-
-		CgenSupport.emitMove(CgenSupport.ACC, CgenSupport.SELF, str);
-		CgenSupport.emitLoad(CgenSupport.FP, 12/4, CgenSupport.SP, str);
-		CgenSupport.emitLoad(CgenSupport.SELF, 8/4, CgenSupport.SP, str);
-		CgenSupport.emitLoad(CgenSupport.RA, 4/4, CgenSupport.SP, str);
-		CgenSupport.emitAddiu(CgenSupport.SP, CgenSupport.SP, 12, str);
-		CgenSupport.emitReturn(str);
-
-	}
+	
 
 
 	for (int i = 0; i < nds.size(); i += 1) {
@@ -739,6 +742,48 @@ class CgenClassTable extends SymbolTable {
 					
 				}
 			}
+	}
+
+	//                 Add your code to emit
+	//                   - object initializer
+	for (int i = 0; i < nds.size(); i += 1) {
+		//we will have to add attributes here later
+		CgenNode curNDS = (CgenNode)nds.get(i);
+		CgenSupport.emitInitRef(curNDS.getName(), str);
+		str.print(CgenSupport.LABEL);
+
+		CgenSupport.emitAddiu(CgenSupport.SP, CgenSupport.SP, -12, str);
+		CgenSupport.emitStore(CgenSupport.FP, 12/4, CgenSupport.SP, str);
+		CgenSupport.emitStore(CgenSupport.SELF, 8/4, CgenSupport.SP, str);
+		CgenSupport.emitStore(CgenSupport.RA, 4/4, CgenSupport.SP, str);
+		CgenSupport.emitAddiu(CgenSupport.FP, CgenSupport.SP, 16, str);
+		CgenSupport.emitMove(CgenSupport.SELF, CgenSupport.ACC, str);
+		//Object_init skips this line
+		if (!curNDS.getName().getString().equals(TreeConstants.Object_.getString())) {
+			CgenSupport.emitJal(curNDS.getParentNd().getName().getString() + CgenSupport.CLASSINIT_SUFFIX, str);
+		}
+
+		Vector<attr> attrInitVector = GlobalData.class_attr_init_map.get(curNDS.name.getString());
+		Collections.reverse(attrInitVector);
+		Vector<String> attrVector = GlobalData.class_attr_map.get(curNDS.name.getString());
+		for (int j = 0; j < attrInitVector.size(); j++) {
+			attr initAttr = attrInitVector.get(j);
+			if (initAttr.init instanceof no_expr) {
+				continue;
+			}
+			initAttr.init.code(str);
+			int realIndex = attrVector.indexOf(initAttr.name.getString());
+			CgenSupport.emitStore(CgenSupport.ACC, realIndex + 3, CgenSupport.SELF, str);
+		}
+
+
+		CgenSupport.emitMove(CgenSupport.ACC, CgenSupport.SELF, str);
+		CgenSupport.emitLoad(CgenSupport.FP, 12/4, CgenSupport.SP, str);
+		CgenSupport.emitLoad(CgenSupport.SELF, 8/4, CgenSupport.SP, str);
+		CgenSupport.emitLoad(CgenSupport.RA, 4/4, CgenSupport.SP, str);
+		CgenSupport.emitAddiu(CgenSupport.SP, CgenSupport.SP, 12, str);
+		CgenSupport.emitReturn(str);
+
 	}
 
 	//                   - the class methods

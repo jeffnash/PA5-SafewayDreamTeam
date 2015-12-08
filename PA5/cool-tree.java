@@ -561,33 +561,17 @@ class assign extends Expression {
       * @param s the output stream 
       * */
     public void code(PrintStream s) {
-        // Vector<String> attrVector = GlobalData.class_attr_map.get(GlobalData.current_class);
-        // if (attrVector == null) {
-        //     System.out.println("Something's wrong");
-        // }
-
-        // int attrIndex = attrVector.indexOf(name.getString());
-        // int formalIndex = GlobalData.cur_method_parameters.indexOf(name.getString());
-
-        // expr.code(s);
-
-        // if (formalIndex != -1) {
-        //     CgenSupport.emitStore(CgenSupport.ACC, formalIndex, CgenSupport.FP, s);
-        // } else if (attrIndex != -1) {
-        //     CgenSupport.emitStore(CgenSupport.ACC, attrIndex + 3, CgenSupport.SELF, s);
-        // } else {
-        //     System.out.println("Something's worng");
-        // }
+        expr.code(s);
 
         if (LetCaseHelper.get(name.getString()) == -1) {
             Vector<String> attrVector = GlobalData.class_attr_map.get(GlobalData.current_class);
-            if (attrVector == null) {
-                System.out.println("attr vector null");
+            int attrIndex = -1;
+            if (attrVector != null) {
+                attrIndex = attrVector.indexOf(name.getString());
             }
-            int attrIndex = attrVector.indexOf(name.getString());
             int formalIndex = GlobalData.cur_method_parameters.indexOf(name.getString());
 
-            expr.code(s);
+            
 
             if (formalIndex != -1) {
                 CgenSupport.emitStore(CgenSupport.ACC, formalIndex + GlobalData.curMethodLetDepth, CgenSupport.FP, s);
@@ -596,7 +580,7 @@ class assign extends Expression {
             } else if (name.getString().equals("self")){
                 CgenSupport.emitMove(CgenSupport.ACC, CgenSupport.SELF, s);
             } else {
-                System.out.println("Something's wrong");
+                System.out.println("Something's wrong in line no " + lineNumber);
             }
 
 
@@ -783,6 +767,7 @@ class dispatch extends Expression {
         CgenSupport.emitLabelDef(nullity_check, s);
 
         Vector<String> methods = GlobalData.class_method_map.get(exprclass);
+        System.out.println(methods);
 
         int method_index = methods.indexOf(name.getString());
         CgenSupport.emitLoad(CgenSupport.T1, 8 / 4, CgenSupport.ACC, s);
@@ -1895,10 +1880,10 @@ class object extends Expression {
     public void code(PrintStream s) {
         if (LetCaseHelper.get(name.getString()) == -1) {
             Vector<String> attrVector = GlobalData.class_attr_map.get(GlobalData.current_class);
-            if (attrVector == null) {
-                System.out.println("attr vector null");
+            int attrIndex = -1;
+            if (attrVector != null) {
+                attrIndex = attrVector.indexOf(name.getString());
             }
-            int attrIndex = attrVector.indexOf(name.getString());
             int formalIndex = GlobalData.cur_method_parameters.indexOf(name.getString());
 
             if (formalIndex != -1) {
@@ -1908,7 +1893,7 @@ class object extends Expression {
             } else if (name.getString().equals("self")){
                 CgenSupport.emitMove(CgenSupport.ACC, CgenSupport.SELF, s);
             } else {
-                System.out.println("Something's wrong");
+                System.out.println("Something's wrong in line no " + lineNumber);
             }
 
 
