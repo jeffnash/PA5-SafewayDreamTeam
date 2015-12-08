@@ -27,7 +27,6 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Set;
 /** This class is used for representing the inheritance tree during code
     generation. You will need to fill in some of its methods and
     potentially extend it in other useful ways. */
@@ -400,16 +399,6 @@ class CgenClassTable extends SymbolTable {
         GlobalData.inheritanceBoundaryMap.put(2, 2);				//bool
         GlobalData.inheritanceBoundaryMap.put(3, 3);				//string
 
-		/* vvvvvvv *Print statement for Jaeseo to verify* vvvvvvvvvvvvvvv */
-        Object[] keys = GlobalData.inheritanceBoundaryMap.keySet().toArray();
-        for (int i = 0; i < keys.length; i += 1) {
-        	System.out.println(keys[i] + " maps to " + GlobalData.inheritanceBoundaryMap.get((Integer)keys[i]));
-        }
-        Vector<String> names = GlobalData.class_names;
-        for (int i = 0; i < names.size(); i += 1) {
-        	System.out.println(names.get(i) + " as " + Integer.toString(i));
-        }
-        /*^^^^^^^ *Take this (and the import of java.util.Set) out when you're done!* ^^^^^^ */
     }
 
     private void recursiveDepthFirst(Class_ parentClass, Vector<Class_> allClasses, Vector<Class_> organizedClassList) {
@@ -509,42 +498,6 @@ class CgenClassTable extends SymbolTable {
 	}
 
 
-	// for (int i = 0; i < nds.size(); i += 1) {
-	// 	CgenNode curNDS = (CgenNode)nds.get(i);
-	// 	//save the original class's name
-	// 	String dispatchedClassName = curNDS.getName().getString();
-	// 	Vector<String> concatenatedClassMethodStrings = new Vector<String>();
-	// 	Vector<String> classMethodStrings = new Vector<String>();
-	// 	while (curNDS.getParentNd() != null) {
-	// 		AbstractSymbol className = curNDS.getName();
-	// 		for (Enumeration e = curNDS.features.getElements(); e.hasMoreElements();) {
-	// 			Feature curElement = (Feature)e.nextElement();
-	// 			if (curElement instanceof method) {
-	// 				method curMethod = (method)curElement;
-	// 				boolean alreadyThere = classMethodStrings.indexOf(curMethod.name.getString()) != -1;
-	// 				if (!alreadyThere) {
-	// 					concatenatedClassMethodStrings.add(className.getString() + CgenSupport.METHOD_SEP + curMethod.name.getString());
-	// 					classMethodStrings.add(curMethod.name.getString());
-	// 				}
-	// 			} 
-	// 		}
-	// 		curNDS = curNDS.getParentNd();
-	// 	}
-
-	// 	Collections.reverse(concatenatedClassMethodStrings);								//SWAG
-	// 	Collections.reverse(classMethodStrings);
-	// 	GlobalData.class_method_map.put(dispatchedClassName, classMethodStrings);
-
-	// 	str.print(dispatchedClassName + CgenSupport.DISPTAB_SUFFIX + CgenSupport.LABEL);
-	// 	for (int j = 0; j < concatenatedClassMethodStrings.size(); j += 1) {
-
-	// 		String concatenatedClassMethodString = concatenatedClassMethodStrings.get(j);
-	// 		str.println(CgenSupport.WORD + concatenatedClassMethodString);
-	// 	}
-				
-
-	// }
-//////
 	for (int i = 0; i < nds.size(); i += 1) {
 		CgenNode curNDS = (CgenNode)nds.get(i);
 		//save the original class's name
@@ -597,9 +550,6 @@ class CgenClassTable extends SymbolTable {
 		CgenNode curNDS2 = (CgenNode)nds.get(i); // this is for getting attribute count
 		CgenSupport.emitProtObjRef(curNDS.getName(), str);
 		String protClassName = curNDS.getName().getString();
-		/* The first three 32-bit words of each object are assumed to contain a class tag, the object size, and a
-			pointer for dispatch information. In addition, the garbage collector requires that the word immediately
-			before an object contain -1; this word is not part of the object.*/
 
 		str.println(CgenSupport.LABEL + CgenSupport.WORD + i);
 		int attrCount = 3;

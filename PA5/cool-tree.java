@@ -725,22 +725,9 @@ class dispatch extends Expression {
       * @param s the output stream 
       * */
     public void code(PrintStream s) {
-        // Enumeration e = actual.getElements();
-        // Expression el = (Expression)e.nextElement();
-        // int NT = CgenClassTable.numTempCounterFunctionEntry(el);
-        // System.out.println(NT);
-
-        // el.code(s);
-
-
-
-        /* We shouldn't make this map here. 
-           We should make this is CgenClassTable and make it globally accessible. (which is taken care of)  */
-        HashMap<Expression, Integer> parameterIndexMap = new HashMap<Expression, Integer>();
         Integer indexCount = 0;
         for (Enumeration e = actual.getElements(); e.hasMoreElements();) {
             Expression el = (Expression)e.nextElement();
-            parameterIndexMap.put(el, indexCount);
             el.code(s);
             CgenSupport.emitPush(CgenSupport.ACC, s);
             indexCount += 1;
@@ -767,7 +754,6 @@ class dispatch extends Expression {
         CgenSupport.emitLabelDef(nullity_check, s);
 
         Vector<String> methods = GlobalData.class_method_map.get(exprclass);
-        System.out.println(methods);
 
         int method_index = methods.indexOf(name.getString());
         CgenSupport.emitLoad(CgenSupport.T1, 8 / 4, CgenSupport.ACC, s);
