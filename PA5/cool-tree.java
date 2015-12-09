@@ -577,16 +577,20 @@ class assign extends Expression {
                 CgenSupport.emitStore(CgenSupport.ACC, formalIndex + GlobalData.curMethodLetDepth, CgenSupport.FP, s);
             } else if (attrIndex != -1) {
                 CgenSupport.emitStore(CgenSupport.ACC, attrIndex + 3, CgenSupport.SELF, s);
+                if (Flags.cgen_Memmgr == Flags.GC_GENGC) {
+                    CgenSupport.emitAddiu(CgenSupport.A1, CgenSupport.SELF, (attrIndex + 3) * 4, s);
+                    CgenSupport.emitGCAssign(s);
+                }
             } else if (name.getString().equals("self")){
                 CgenSupport.emitMove(CgenSupport.ACC, CgenSupport.SELF, s);
             } else {
                 System.out.println("Something's wrong in line no " + lineNumber);
             }
 
-
         } else {
             CgenSupport.emitStore(CgenSupport.ACC, LetCaseHelper.get(name.getString()), CgenSupport.FP, s);
         }
+
     }
 
 }
@@ -654,6 +658,7 @@ class static_dispatch extends Expression {
             indexCount += 1;
         }
 
+        expr.code(s);
         String exprclass = type_name.getString();
 
         // for fucking null pointer exception
@@ -667,7 +672,8 @@ class static_dispatch extends Expression {
         Vector<String> methods = GlobalData.class_method_map.get(exprclass);
 
         int method_index = methods.indexOf(name.getString());
-        CgenSupport.emitLoad(CgenSupport.T1, 8 / 4, CgenSupport.ACC, s);
+
+        CgenSupport.emitLoadAddress(CgenSupport.T1, type_name.getString() + CgenSupport.DISPTAB_SUFFIX, s);
         CgenSupport.emitLoad(CgenSupport.T1, method_index, CgenSupport.T1, s);
         CgenSupport.emitJalr(CgenSupport.T1, s);
     }

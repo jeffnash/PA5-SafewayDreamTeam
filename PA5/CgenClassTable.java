@@ -724,6 +724,10 @@ class CgenClassTable extends SymbolTable {
 			initAttr.init.code(str);
 			int realIndex = attrVector.indexOf(initAttr.name.getString());
 			CgenSupport.emitStore(CgenSupport.ACC, realIndex + 3, CgenSupport.SELF, str);
+			if (Flags.cgen_Memmgr == Flags.GC_GENGC) {
+                    CgenSupport.emitAddiu(CgenSupport.A1, CgenSupport.SELF, (realIndex + 3) * 4, str);
+                    CgenSupport.emitGCAssign(str);
+            }
 		}
 
 
