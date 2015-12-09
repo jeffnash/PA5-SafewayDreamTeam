@@ -171,7 +171,13 @@ Instructions
 
 Write-up for PA5
 ----------------
+This project was markedly harder than all of the previous programming assignments combined, largely because, as a concept, code generation itself is extremely complicated. It was certainly nice that we got to leverage the reference parser and lexer, which guaranteed the type safety of the code we were to deal with. However, dealing with registers and allocate temporaries when needed, all while keeping track of offsets, presented a new set of challenges that only became apparent as we delved into the recursive nature of expression evaluation.
 
+When coding CgenClassTable.java, it was immensely helpful that all inheritance relationships were stored in each CgenNode, which represented each class. Once we had called installBasicClasses(), we chose to use a recursive function to run a depth-first search on each class's inheritance tree. While the order of class-tags didn't seem important at the start of the project, guaranteeing that the class-tags representing a given class and its children were adjacent to one another helped us in one of the most esoteric, specific, and complicated features of the COOL language: the case statement.
+
+Having to retroactively implement a depth-first search once class-tags were already such a long-forgotten and assumed aspect of our completion of this project was a pain, with off-by-one errors abound. However, being able to guarantee that, given an arbitrary class-tag, one could use the class's integer representation to retrieve two integers from a map (we used a HashMap) that would represent the 'boundary classes' of its inheritance tree was vital in the last mile of our project: getting case to work.
+
+Finally, wrapping our minds around what needed to be done for garbage collection was also somewhat of a challenge, but once we realized our implementation merely had to be compatible with the existing garbage collection system (and recognize the flags in Flags.java), things became a lot easier. Despite many tears and sleepless nights along the way, this project proved to be a fitting end to the class that synced up quite nicely with the material presented in lecture. 5/5 stars.
 
 
 
